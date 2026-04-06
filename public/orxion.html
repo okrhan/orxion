@@ -670,7 +670,32 @@ footer{border-top:1px solid var(--bdr);padding:24px 40px;display:flex;justify-co
   <div id="form-error" class="form-error"></div>
   <div class="form-card fu d1">
 
-    <!-- 01 -->
+    <!-- 00 — FINANCIAL STATEMENT TOGGLE -->
+    <div style="margin-bottom:28px;padding:18px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:12px">
+      <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Do you have financial statements?</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:14px">Upload your P&L or annual report for a deeper, more precise diagnosis.</div>
+      <div style="display:flex;gap:10px;margin-bottom:0" id="stmt-toggle">
+        <button id="btn-has-stmt" onclick="setStmt(true)" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(79,142,247,.4);background:rgba(79,142,247,.15);color:var(--blue2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">
+          Yes, I have statements
+        </button>
+        <button id="btn-no-stmt" onclick="setStmt(false)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">
+          No, I'll enter manually
+        </button>
+      </div>
+      <!-- Upload zone — shown when has statements -->
+      <div id="stmt-upload-zone" style="display:none;margin-top:12px">
+        <div id="upload-zone" onclick="document.getElementById('f-file').click()"
+          style="border:1px dashed rgba(79,142,247,.3);border-radius:9px;padding:22px 20px;text-align:center;cursor:pointer;background:rgba(79,142,247,.04);transition:all .2s"
+          onmouseenter="this.style.borderColor='var(--blue)';this.style.background='rgba(79,142,247,.08)'"
+          onmouseleave="this.style.borderColor='rgba(79,142,247,.3)';this.style.background='rgba(79,142,247,.04)'">
+          <input type="file" id="f-file" accept=".pdf" style="display:none" onchange="handleFile(this)">
+          <div id="upload-icon" style="font-size:22px;margin-bottom:6px">📄</div>
+          <div id="upload-label" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--txt3)">Upload PDF · P&L, annual report, financial statements</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 01 — Company Profile -->
     <div style="margin-bottom:28px">
       <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Company Profile</span></div>
       <div style="margin-bottom:12px">
@@ -699,8 +724,8 @@ footer{border-top:1px solid var(--bdr);padding:24px 40px;display:flex;justify-co
       </div>
     </div>
 
-    <!-- 02 -->
-    <div style="margin-bottom:28px">
+    <!-- 02 — Financial Metrics (hidden if has statements) -->
+    <div id="manual-financials" style="margin-bottom:28px">
       <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Financial Metrics</span></div>
       <div class="g2" style="margin-bottom:12px">
         <div><label class="field-lbl">Monthly Revenue ($)</label><input class="fi" type="number" id="f-rev" placeholder="0"></div>
@@ -714,9 +739,9 @@ footer{border-top:1px solid var(--bdr);padding:24px 40px;display:flex;justify-co
       <div style="max-width:50%"><label class="field-lbl">Team Size</label><input class="fi" type="number" id="f-team" placeholder="—"></div>
     </div>
 
-    <!-- 03 -->
+    <!-- 03 — Channels -->
     <div style="margin-bottom:28px">
-      <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">Marketing Channels</span></div>
+      <div class="sec-hdr"><span class="sec-num" id="ch-sec-num">3</span><span class="sec-title">Marketing Channels</span></div>
       <label class="field-lbl" style="margin-bottom:9px">Active Channels</label>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px" id="channels-wrap"></div>
       <div><label class="field-lbl">Website URL</label><input class="fi" id="f-web" placeholder="https://…"></div>
@@ -804,7 +829,7 @@ footer{border-top:1px solid var(--bdr);padding:24px 40px;display:flex;justify-co
 <script>
 const CHANNELS=['Organic Search','Paid Search','LinkedIn','Instagram','Facebook','Email','Content / SEO','Referral'];
 const TICKER=['REVENUE GROWTH +24%','LTV:CAC 4.2×','BURN RATE $42K/MO','GROSS MARGIN 68%','CHURN 2.1%','ARR $840K','PAYBACK 11 MO','NPS SCORE 54','CAC $120','PIPELINE $1.2M'];
-let appState={form:{},report:null,fdata:null,pct:0,loadInt:null,pctInt:null};
+let appState={form:{},report:null,fdata:null,pct:0,loadInt:null,pctInt:null,hasStmt:false,pdfName:''};
 let selectedChannels=[];
 let charts={};
 
@@ -928,15 +953,18 @@ async function runAnalysis(retryMode){
       return;
     }
     document.getElementById('form-error').style.display='none';
+    const hasStmt=appState.hasStmt;
     appState.fdata={name,industry,stage,
-      revenue:document.getElementById('f-rev').value,
-      costs:document.getElementById('f-costs').value,
-      cac:document.getElementById('f-cac').value,
-      ltv:document.getElementById('f-ltv').value,
-      conv:document.getElementById('f-conv').value,
-      team:document.getElementById('f-team').value,
+      revenue:hasStmt?'(see financial statements)':document.getElementById('f-rev').value,
+      costs:hasStmt?'(see financial statements)':document.getElementById('f-costs').value,
+      cac:hasStmt?'(see financial statements)':document.getElementById('f-cac').value,
+      ltv:hasStmt?'(see financial statements)':document.getElementById('f-ltv').value,
+      conv:hasStmt?'(see financial statements)':document.getElementById('f-conv').value,
+      team:document.getElementById('f-team')?document.getElementById('f-team').value:'?',
       channels:[...selectedChannels],
-      website:document.getElementById('f-web').value};
+      website:document.getElementById('f-web').value,
+      hasStatements:hasStmt,
+      pdfName:appState.pdfName||''};
   }
   goTo('load');
   appState.pct=0;
@@ -1122,11 +1150,50 @@ ${r.metrics?`<h2>Key Metrics</h2><div class="g3">${Object.entries(r.metrics).map
   w.document.close();setTimeout(()=>w.print(),900);
 }
 
+/* STMT TOGGLE */
+function setStmt(has){
+  appState.hasStmt=has;
+  const btnY=document.getElementById('btn-has-stmt');
+  const btnN=document.getElementById('btn-no-stmt');
+  const upload=document.getElementById('stmt-upload-zone');
+  const manual=document.getElementById('manual-financials');
+  if(has){
+    btnY.style.background='rgba(79,142,247,.2)';btnY.style.borderColor='var(--blue)';btnY.style.color='#fff';
+    btnN.style.background='transparent';btnN.style.borderColor='var(--bdr)';btnN.style.color='var(--txt2)';
+    if(upload)upload.style.display='block';
+    if(manual)manual.style.display='none';
+  } else {
+    btnN.style.background='rgba(255,255,255,.06)';btnN.style.borderColor='var(--bdr2)';btnN.style.color='#fff';
+    btnY.style.background='transparent';btnY.style.borderColor='rgba(79,142,247,.3)';btnY.style.color='var(--blue2)';
+    if(upload)upload.style.display='none';
+    if(manual)manual.style.display='block';
+  }
+}
+
+function handleFile(input){
+  if(!input.files[0])return;
+  appState.pdfName=input.files[0].name;
+  document.getElementById('upload-icon').textContent='✅';
+  document.getElementById('upload-label').textContent=appState.pdfName;
+  document.getElementById('upload-label').style.color='var(--grn)';
+}
+
 /* RESET */
 function resetApp(){
-  appState.report=null;appState.fdata=null;selectedChannels=[];
+  appState.report=null;appState.fdata=null;appState.pdfName='';appState.hasStmt=false;selectedChannels=[];
   ['f-name','f-industry','f-stage','f-rev','f-costs','f-cac','f-ltv','f-conv','f-team','f-web'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const err=document.getElementById('form-error');if(err)err.style.display='none';
+  // Reset stmt toggle
+  const upload=document.getElementById('stmt-upload-zone');
+  const manual=document.getElementById('manual-financials');
+  if(upload)upload.style.display='none';
+  if(manual)manual.style.display='block';
+  const btnY=document.getElementById('btn-has-stmt');
+  const btnN=document.getElementById('btn-no-stmt');
+  if(btnY){btnY.style.background='rgba(79,142,247,.15)';btnY.style.borderColor='rgba(79,142,247,.4)';btnY.style.color='var(--blue2)';}
+  if(btnN){btnN.style.background='transparent';btnN.style.borderColor='var(--bdr)';btnN.style.color='var(--txt2)';}
+  const uIcon=document.getElementById('upload-icon');if(uIcon)uIcon.textContent='📄';
+  const uLabel=document.getElementById('upload-label');if(uLabel){uLabel.textContent='Upload PDF · P&L, annual report, financial statements';uLabel.style.color='';}
   initChannels();goTo('land');
 }
 
