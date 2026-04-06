@@ -4,1430 +4,1137 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orxion AI — Business Diagnosis Engine</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* ── THEME VARIABLES ─────────────────────────────────── */
-:root {
-  --bg:#06090F; --bg2:#0D1117; --bg3:#111827;
-  --surf:#0D1117; --surf2:#111827;
-  --bdr:#1E293B; --bdr2:#334155;
-  --txt:#F1F5F9; --txt2:#94A3B8; --txt3:#475569;
-  --acc:#3B82F6; --acc2:#60A5FA;
-  --grn:#22C55E; --amb:#F59E0B; --red:#EF4444; --pur:#8B5CF6;
-  --nav-bg:rgba(6,9,15,.95);
+:root{
+--bg:#03050A;--bg2:#070B14;--bg3:#0C1220;
+--surf:rgba(255,255,255,.04);--surf2:rgba(255,255,255,.07);
+--bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.14);
+--txt:#F0F4FF;--txt2:#8B95AA;--txt3:#4A5568;
+--blue:#4F8EF7;--blue2:#7FB3FF;
+--grn:#22D47A;--amb:#F5A623;--red:#FF5B5B;--pur:#A78BFA;
+--cyan:#22D4C8;
+--g1:linear-gradient(135deg,#4F8EF7,#7B5CF6);
+--g2:linear-gradient(135deg,#22D47A,#4F8EF7);
+--gcard:linear-gradient(145deg,rgba(79,142,247,.12),rgba(123,92,246,.06));
 }
-body.light {
-  --bg:#F8FAFC; --bg2:#F1F5F9; --bg3:#E2E8F0;
-  --surf:#FFFFFF; --surf2:#F8FAFC;
-  --bdr:#E2E8F0; --bdr2:#CBD5E1;
-  --txt:#0F172A; --txt2:#334155; --txt3:#64748B;
-  --acc:#2563EB; --acc2:#3B82F6;
-  --grn:#16A34A; --amb:#D97706; --red:#DC2626; --pur:#7C3AED;
-  --nav-bg:rgba(248,250,252,.95);
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+input,select,button{font-family:'Inter',sans-serif}
+::selection{background:rgba(79,142,247,.3);color:#fff}
+.mono{font-family:'JetBrains Mono',monospace}
 
-/* ── RESET ───────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--txt);
-  min-height: 100vh;
-  transition: background .25s, color .25s;
-  -webkit-font-smoothing: antialiased;
-}
-input, select, button, textarea { font-family: 'DM Sans', sans-serif; }
-::selection { background: rgba(59,130,246,.2); color: var(--acc); }
+/* NOISE OVERLAY */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
 
-/* ── ANIMATIONS ──────────────────────────────────────── */
-@keyframes ticker   { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-@keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0} }
-@keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
-@keyframes spin     { to{transform:rotate(360deg)} }
-@keyframes pulse    { 0%,100%{opacity:.3} 50%{opacity:1} }
-@keyframes slideIn  { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:none} }
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes pulse{0%,100%{opacity:.2}50%{opacity:.8}}
+@keyframes countUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(79,142,247,.2)}50%{box-shadow:0 0 40px rgba(79,142,247,.5)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes orb1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.1)}}
+@keyframes orb2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,40px) scale(1.05)}}
+@keyframes scoreRing{from{stroke-dasharray:0 339}to{stroke-dasharray:var(--target) 339}}
+@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
 
-.fu  { animation: fadeUp .6s cubic-bezier(.22,1,.36,1) both; }
-.si  { animation: slideIn .5s cubic-bezier(.22,1,.36,1) both; }
-.d1  { animation-delay:.07s; }
-.d2  { animation-delay:.15s; }
-.d3  { animation-delay:.24s; }
-.d4  { animation-delay:.34s; }
+.fu{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both}
+.fi2{animation:fadeIn .5s ease both}
+.d1{animation-delay:.08s}.d2{animation-delay:.17s}.d3{animation-delay:.27s}.d4{animation-delay:.38s}.d5{animation-delay:.5s}
 
-/* ── NAVIGATION ──────────────────────────────────────── */
-.nav {
-  height: 56px;
-  border-bottom: 1px solid var(--bdr);
-  padding: 0 36px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: var(--nav-bg);
-  backdrop-filter: blur(20px);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  transition: background .25s, border-color .25s;
-}
-.logo {
-  font-family: 'DM Mono', monospace;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--txt);
-  letter-spacing: -0.5px;
-  text-decoration: none;
-}
-.logo-x { color: var(--acc); }
-.nav-live {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: var(--txt3);
-  letter-spacing: 1.5px;
-  border: 1px solid var(--bdr);
-  border-radius: 20px;
-  padding: 3px 10px 3px 7px;
-}
-.live-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--grn);
-  animation: blink 2s step-end infinite;
-  flex-shrink: 0;
-}
-.theme-toggle {
-  background: var(--surf);
-  border: 1px solid var(--bdr);
-  border-radius: 22px;
-  padding: 3px;
-  display: flex;
-  gap: 2px;
-  cursor: pointer;
-  transition: all .2s;
-}
-.theme-opt {
-  padding: 4px 11px;
-  border-radius: 18px;
-  font-size: 11px;
-  font-family: 'DM Mono', monospace;
-  cursor: pointer;
-  transition: all .15s;
-  color: var(--txt3);
-  background: transparent;
-  border: none;
-  letter-spacing: .5px;
-}
-.theme-opt.active { background: var(--acc); color: #fff; }
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
 
-/* ── BUTTONS ─────────────────────────────────────────── */
-.btn-prim {
-  background: var(--acc);
-  color: #fff;
-  border: none;
-  padding: 10px 22px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .15s;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  letter-spacing: -0.2px;
-}
-.btn-prim:hover { filter: brightness(1.1); transform: translateY(-1px); }
-.btn-prim:active { transform: none; filter: brightness(.95); }
-.btn-prim-lg {
-  padding: 13px 32px;
-  font-size: 15px;
-  border-radius: 8px;
-}
-.btn-ghost {
-  background: transparent;
-  color: var(--txt2);
-  border: 1px solid var(--bdr);
-  padding: 8px 16px;
-  border-radius: 7px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all .15s;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: .5px;
-}
-.btn-ghost:hover { border-color: var(--bdr2); color: var(--txt); }
-.btn-submit {
-  width: 100%;
-  background: var(--acc);
-  color: #fff;
-  border: none;
-  padding: 14px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all .15s;
-  letter-spacing: -0.2px;
-}
-.btn-submit:hover { filter: brightness(1.08); }
+/* NAV */
+.nav{height:60px;display:flex;align-items:center;padding:0 40px;gap:14px;position:sticky;top:0;z-index:100;background:rgba(3,5,10,.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr)}
+.logo-mark{width:30px;height:30px;background:var(--g1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0}
+.logo-svg{display:flex;align-items:center;flex-shrink:0}
+.logo-text{font-weight:800;font-size:17px;letter-spacing:-0.5px;color:#fff}
+.logo-text span{color:#fff;background:none;-webkit-background-clip:unset;-webkit-text-fill-color:unset}
+.nav-badge{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--grn);font-family:'JetBrains Mono',monospace;letter-spacing:1px;border:1px solid rgba(34,212,122,.2);border-radius:20px;padding:3px 10px 3px 7px;background:rgba(34,212,122,.05)}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:blink 2s step-end infinite;flex-shrink:0}
 
-/* ── FORM ELEMENTS ───────────────────────────────────── */
-.fi {
-  width: 100%;
-  padding: 10px 13px;
-  background: var(--surf);
-  border: 1px solid var(--bdr);
-  border-radius: 7px;
-  color: var(--txt);
-  font-size: 13px;
-  outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-.fi:focus {
-  border-color: var(--acc);
-  box-shadow: 0 0 0 2px rgba(59,130,246,.15);
-}
-.fi::placeholder { color: var(--txt3); }
-.fi option { background: var(--surf); color: var(--txt); }
-.fi-sel {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748B' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 11px center;
-  cursor: pointer;
-}
-.ch-pill {
-  padding: 6px 13px;
-  border-radius: 20px;
-  border: 1px solid var(--bdr);
-  background: var(--surf);
-  color: var(--txt3);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .14s;
-  white-space: nowrap;
-  font-family: 'DM Mono', monospace;
-}
-.ch-pill:hover { border-color: var(--bdr2); color: var(--txt); }
-.ch-pill.on {
-  border-color: var(--acc);
-  background: rgba(59,130,246,.1);
-  color: var(--acc);
-}
+/* BUTTONS */
+.btn-glow{display:inline-flex;align-items:center;gap:8px;background:var(--g1);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px;position:relative;overflow:hidden}
+.btn-glow::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s}
+.btn-glow:hover::before{opacity:1}
+.btn-glow:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,142,247,.4)}
+.btn-glow:active{transform:none}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--bdr);padding:10px 20px;border-radius:9px;font-size:13px;cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.btn-ghost:hover{border-color:var(--bdr2);color:var(--txt);background:var(--surf)}
+.btn-submit{width:100%;background:var(--g1);color:#fff;border:none;padding:15px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,142,247,.4)}
 
-/* ── CARDS ───────────────────────────────────────────── */
-.card {
-  background: var(--surf);
-  border: 1px solid var(--bdr);
-  border-radius: 12px;
-  transition: background .25s, border-color .25s;
-}
-.card-pad { padding: 22px; }
+/* TICKER */
+.ticker-wrap{overflow:hidden;border-bottom:1px solid var(--bdr);background:var(--bg2);padding:9px 0}
+.ticker-inner{display:flex;white-space:nowrap;animation:ticker 28s linear infinite}
+.tick-item{padding:0 28px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:1.5px;display:flex;align-items:center;gap:10px}
+.tick-up{color:var(--grn)}
+.tick-dn{color:var(--red)}
 
-/* ── TYPOGRAPHY HELPERS ──────────────────────────────── */
-.lbl {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--txt3);
-}
-.mono { font-family: 'DM Mono', monospace; }
+/* HERO */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;padding:80px 40px 60px;position:relative;overflow:hidden;max-width:1200px;margin:0 auto}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
+.orb-a{width:600px;height:600px;background:radial-gradient(circle,rgba(79,142,247,.15),transparent 70%);top:-100px;left:-100px;animation:orb1 14s ease-in-out infinite}
+.orb-b{width:500px;height:500px;background:radial-gradient(circle,rgba(123,92,246,.12),transparent 70%);bottom:-80px;right:-80px;animation:orb2 18s ease-in-out infinite}
+.orb-c{width:300px;height:300px;background:radial-gradient(circle,rgba(34,212,122,.08),transparent 70%);top:40%;left:40%;animation:orb1 22s ease-in-out infinite reverse}
 
-/* ── TICKER ──────────────────────────────────────────── */
-.ticker-wrap {
-  overflow: hidden;
-  border-bottom: 1px solid var(--bdr);
-  background: var(--bg2);
-  padding: 8px 0;
-  transition: background .25s, border-color .25s;
-}
-.ticker-inner {
-  display: flex;
-  white-space: nowrap;
-  animation: ticker 26s linear infinite;
-}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:5px 14px 5px 9px;margin-bottom:22px;font-size:11px;color:var(--blue2);font-family:'JetBrains Mono',monospace;letter-spacing:1px}
+.hero-h1{font-size:clamp(38px,4.5vw,62px);font-weight:900;line-height:1.0;letter-spacing:-2px;color:#fff;margin-bottom:18px}
+.hero-h1 .grad{background:linear-gradient(135deg,#4F8EF7,#A78BFA,#22D4C8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmer 4s linear infinite}
+.hero-sub{font-size:17px;color:var(--txt2);line-height:1.7;margin-bottom:32px;max-width:480px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:44px}
+.hero-stats{display:flex;gap:32px}
+.hero-stat-val{font-size:26px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1}
+.hero-stat-lbl{font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-top:3px}
 
-/* ── GRID BG ─────────────────────────────────────────── */
-.grid-bg {
-  position: absolute; inset: 0;
-  background-image:
-    linear-gradient(var(--bdr) 1px, transparent 1px),
-    linear-gradient(90deg, var(--bdr) 1px, transparent 1px);
-  background-size: 44px 44px;
-  opacity: .5;
-  pointer-events: none;
-  transition: opacity .25s;
-}
+/* DASHBOARD PREVIEW */
+.dash-preview{background:rgba(12,18,32,.8);border:1px solid var(--bdr);border-radius:16px;padding:20px;backdrop-filter:blur(20px);animation:float 6s ease-in-out infinite;position:relative}
+.dash-preview::before{content:'';position:absolute;inset:-1px;border-radius:17px;background:linear-gradient(135deg,rgba(79,142,247,.3),rgba(123,92,246,.15),transparent 60%);z-index:-1}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.dash-dots{display:flex;gap:5px}
+.dash-dot{width:9px;height:9px;border-radius:50%}
+.mini-card{background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:9px;padding:10px 12px}
+.mini-lbl{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+.mini-val{font-size:18px;font-weight:700;line-height:1}
 
-/* ── PAGES ───────────────────────────────────────────── */
-.page { display: none; }
-.page.active { display: block; }
+/* FEATURE CARDS */
+.feat-section{padding:80px 40px;max-width:1200px;margin:0 auto}
+.section-tag{display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding:3px 10px;background:rgba(79,142,247,.1);border-radius:4px}
+.section-h{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1.5px;color:#fff;line-height:1.1;margin-bottom:14px}
+.section-sub{font-size:16px;color:var(--txt2);line-height:1.7;max-width:560px;margin-bottom:52px}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:16px;overflow:hidden}
+.feat-card{background:var(--bg2);padding:28px;transition:background .2s;cursor:default;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;inset:0;background:var(--gcard);opacity:0;transition:opacity .3s}
+.feat-card:hover::before{opacity:1}
+.feat-card:hover{background:#0A1020}
+.feat-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;margin-bottom:12px;font-weight:500}
+.feat-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:7px;letter-spacing:-0.3px}
+.feat-desc{font-size:13px;color:var(--txt2);line-height:1.65}
+.feat-icon{font-size:28px;margin-bottom:14px}
 
-/* ── FORM SECTION ────────────────────────────────────── */
-.form-sec-hdr {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 14px;
-  padding-bottom: 11px;
-  border-bottom: 1px solid var(--bdr);
-}
-.form-sec-num {
-  width: 20px; height: 20px;
-  border-radius: 50%;
-  background: var(--bdr);
-  color: var(--acc);
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.form-sec-title {
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--txt2);
-  font-family: 'DM Mono', monospace;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.field-label {
-  display: block;
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  color: var(--txt3);
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.field-req { color: var(--acc); margin-left: 2px; }
-.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+/* PROOF / HOW IT WORKS */
+.proof-section{padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.proof-inner{max-width:1200px;margin:0 auto}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.step{padding:36px 32px;position:relative}
+.step:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:20px;z-index:2}
+.step-num{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;margin-bottom:16px;background:var(--g1)}
+.step-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-0.3px}
+.step-desc{font-size:13px;color:var(--txt2);line-height:1.65}
 
-/* ── REPORT ──────────────────────────────────────────── */
-.rep-hdr {
-  position: sticky;
-  top: 56px;
-  z-index: 90;
-  background: var(--nav-bg);
-  border-bottom: 1px solid var(--bdr);
-  backdrop-filter: blur(16px);
-  padding: 0 28px;
-  transition: background .25s, border-color .25s;
-}
-.rep-hdr-inner {
-  max-width: 960px;
-  margin: 0 auto;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.rep-tag {
-  font-family: 'DM Mono', monospace;
-  font-size: 8px;
-  color: var(--txt3);
-  background: var(--bg2);
-  border: 1px solid var(--bdr);
-  padding: 2px 8px;
-  border-radius: 3px;
-  letter-spacing: .5px;
-}
-.phase-col { display: flex; flex-direction: column; gap: 0; }
-.phase-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  padding-bottom: 8px;
-  margin-bottom: 10px;
-}
-.phase-item {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  padding: 7px 9px;
-  background: var(--bg2);
-  border: 1px solid var(--bdr);
-  border-radius: 5px;
-  margin-bottom: 6px;
-  font-size: 12px;
-  color: var(--txt3);
-  line-height: 1.5;
-}
-.pillar-card {
-  background: var(--bg2);
-  border: 1px solid var(--bdr);
-  border-radius: 8px;
-  padding: 16px;
-  border-top-width: 2px;
-}
+/* ANALYTICS PREVIEW */
+.analytics-section{padding:80px 40px;max-width:1200px;margin:0 auto}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;padding:20px}
+.chart-title{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
 
-/* ── LOADING ─────────────────────────────────────────── */
-.load-wrap {
-  min-height: calc(100vh - 56px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 24px;
-  background: var(--bg);
-  transition: background .25s;
-}
-.spin-ring {
-  animation: spin 2s linear infinite;
-  transform-origin: center;
-}
-.spin-ring-rev {
-  animation: spin 3.2s linear infinite reverse;
-  transform-origin: center;
-}
-.prog-bar {
-  width: 220px; height: 2px;
-  background: var(--bdr);
-  border-radius: 1px;
-  margin-top: 20px;
-  position: relative;
-  overflow: hidden;
-}
-.prog-fill {
-  position: absolute;
-  top: 0; left: 0;
-  height: 100%;
-  background: var(--acc);
-  border-radius: 1px;
-  transition: width .3s ease;
-}
+/* SOCIAL PROOF */
+.proof-bar{padding:48px 40px;max-width:1200px;margin:0 auto;display:flex;gap:48px;align-items:center;border-top:1px solid var(--bdr)}
+.proof-stat{text-align:center;flex:1}
+.proof-val{font-size:36px;font-weight:900;letter-spacing:-1.5px;background:var(--g1);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.proof-lbl{font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-top:4px}
 
-/* ── RESPONSIVE ──────────────────────────────────────── */
-@media (max-width: 768px) {
-  .nav { padding: 0 20px; }
-  .nav-live { display: none; }
-  .hero-grid { grid-template-columns: 1fr !important; }
-  .g2, .g3 { grid-template-columns: 1fr !important; }
-  .plan-grid { grid-template-columns: 1fr !important; }
-  .charts-row { grid-template-columns: 1fr !important; }
-  .pillars-grid { grid-template-columns: 1fr !important; }
-  .metrics-grid { grid-template-columns: 1fr 1fr !important; }
-  .feat-grid { grid-template-columns: 1fr 1fr !important; }
-  .steps-grid { grid-template-columns: 1fr !important; }
-  .diff-grid { grid-template-columns: 1fr !important; }
-  .score-row { grid-template-columns: 1fr !important; }
+/* TESTIMONIALS */
+.testi-section{padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr)}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1200px;margin:40px auto 0}
+.testi-card{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:14px;padding:24px}
+.testi-stars{color:var(--amb);font-size:13px;margin-bottom:12px}
+.testi-txt{font-size:14px;color:var(--txt2);line-height:1.7;margin-bottom:16px;font-style:italic}
+.testi-author{display:flex;align-items:center;gap:10px}
+.testi-avatar{width:36px;height:36px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.testi-name{font-size:13px;font-weight:600;color:#fff}
+.testi-role{font-size:11px;color:var(--txt3)}
+
+/* PRICING */
+.pricing-section{padding:80px 40px;max-width:1200px;margin:0 auto}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:48px}
+.pricing-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;padding:32px}
+.pricing-card.featured{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.06);position:relative;overflow:hidden}
+.pricing-card.featured::before{content:'';position:absolute;inset:-1px;border-radius:17px;background:linear-gradient(135deg,rgba(79,142,247,.4),rgba(123,92,246,.2),transparent 60%);z-index:-1}
+.pricing-badge{display:inline-block;background:var(--g1);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+.pricing-name{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
+.pricing-price{font-size:42px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:4px}
+.pricing-per{font-size:13px;color:var(--txt3);margin-bottom:20px}
+.pricing-features{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+.pricing-feat{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--txt2)}
+.pricing-feat-check{color:var(--grn);font-size:14px;flex-shrink:0}
+
+/* CTA */
+.cta-section{padding:96px 40px;text-align:center;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(79,142,247,.1),transparent 70%);pointer-events:none}
+.cta-h{font-size:clamp(36px,6vw,72px);font-weight:900;letter-spacing:-2px;color:#fff;line-height:1;margin-bottom:18px}
+.cta-h .grad{background:linear-gradient(135deg,#4F8EF7,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+footer{border-top:1px solid var(--bdr);padding:24px 40px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)}
+
+/* FORM */
+.form-wrap{background:var(--bg2);min-height:calc(100vh - 60px)}
+.form-inner{max-width:640px;margin:0 auto;padding:52px 24px 88px}
+.form-header{margin-bottom:36px}
+.form-tag{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:block}
+.form-h1{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+.form-sub{font-size:14px;color:var(--txt2);line-height:1.7}
+.form-card{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:16px;padding:32px}
+.form-card:hover{border-color:var(--bdr2)}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--bdr)}
+.sec-num{width:22px;height:22px;border-radius:6px;background:var(--g1);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:12px;font-weight:600;color:var(--txt2);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase}
+.field-lbl{display:block;font-size:10px;font-weight:500;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;font-family:'JetBrains Mono',monospace}
+.field-req{color:var(--blue);margin-left:2px}
+.fi{width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:9px;color:var(--txt);font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.15)}
+.fi::placeholder{color:var(--txt3)}
+.fi option{background:#0C1220;color:var(--txt)}
+.fi-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234A5568' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ch-pill{padding:7px 13px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);font-size:11px;font-weight:500;cursor:pointer;transition:all .14s;white-space:nowrap;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.ch-pill:hover{border-color:var(--bdr2);color:var(--txt2)}
+.ch-pill.on{border-color:var(--blue);background:rgba(79,142,247,.12);color:var(--blue)}
+.form-error{display:none;background:rgba(255,91,91,.1);border:1px solid rgba(255,91,91,.3);border-radius:8px;padding:10px 14px;margin-bottom:20px;color:var(--red);font-size:12px;font-family:'JetBrains Mono',monospace}
+
+/* LOADING */
+.load-wrap{min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--bg)}
+.load-rings{position:relative;width:100px;height:100px;margin-bottom:40px}
+.ring{position:absolute;border-radius:50%;border:2px solid transparent}
+.ring1{inset:0;border-top-color:var(--blue);animation:spin 1.8s linear infinite}
+.ring2{inset:12px;border-top-color:var(--pur);animation:spin 2.4s linear infinite reverse}
+.ring3{inset:24px;border-top-color:var(--cyan);animation:spin 3s linear infinite}
+.ring-core{position:absolute;inset:36px;border-radius:50%;background:var(--blue);opacity:.3;animation:pulse 1.5s ease infinite}
+.prog-bar{width:240px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:24px;position:relative;overflow:hidden}
+.prog-fill{position:absolute;top:0;left:0;height:100%;border-radius:2px;transition:width .3s ease;background:linear-gradient(90deg,var(--blue),var(--pur))}
+.prog-shimmer{position:absolute;top:0;left:0;width:40px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 1.5s infinite}
+
+/* REPORT */
+.rep-nav{position:sticky;top:60px;z-index:90;background:rgba(3,5,10,.9);border-bottom:1px solid var(--bdr);backdrop-filter:blur(24px);padding:0 28px}
+.rep-nav-inner{max-width:1000px;margin:0 auto;height:54px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rep-body{background:var(--bg);min-height:calc(100vh - 114px)}
+.rep-inner{max-width:1000px;margin:0 auto;padding:28px 24px 88px}
+
+.rep-cover{background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(123,92,246,.06));border:1px solid rgba(79,142,247,.2);border-radius:16px;padding:32px;margin-bottom:20px}
+.rep-co{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:4px}
+.rep-meta{font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:12px;padding:16px;transition:border-color .2s,transform .2s}
+.kpi:hover{border-color:var(--bdr2);transform:translateY(-2px)}
+.kpi-lbl{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.kpi-val{font-size:24px;font-weight:800;line-height:1;letter-spacing:-0.5px}
+.kpi-note{font-size:10px;color:var(--txt3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+
+.rep-card{background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:14px;padding:22px;margin-bottom:14px;transition:border-color .2s}
+.rep-card:hover{border-color:var(--bdr2)}
+.rep-card-title{font-size:10px;font-weight:500;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.rep-card-title::before{content:'';display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--g1)}
+
+.finding{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);align-items:flex-start}
+.finding:last-child{border-bottom:none}
+.badge{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px;letter-spacing:.5px}
+.badge-crit{background:rgba(255,91,91,.15);color:var(--red)}
+.badge-high{background:rgba(245,166,35,.15);color:var(--amb)}
+.badge-pos{background:rgba(34,212,122,.15);color:var(--grn)}
+.finding-txt{font-size:13px;color:var(--txt2);line-height:1.6}
+
+.root-box{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15);border-radius:10px;padding:14px;margin-bottom:9px}
+.root-box:last-child{margin-bottom:0}
+.root-lbl{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1.5px;margin-bottom:5px}
+.root-txt{font-size:12px;color:var(--txt2);line-height:1.65}
+
+.pillar{border-left:3px solid;padding:14px 16px;margin-bottom:10px;background:rgba(255,255,255,.02);border-radius:0 10px 10px 0}
+.pillar:last-child{margin-bottom:0}
+.pillar-num{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:5px;letter-spacing:1px}
+.pillar-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:5px;letter-spacing:-0.2px}
+.pillar-desc{font-size:12px;color:var(--txt2);line-height:1.65}
+
+.phase-hdr{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;padding-bottom:8px;margin-bottom:10px;border-bottom:1px solid var(--bdr)}
+.phase-item{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--txt2);line-height:1.5}
+.phase-arrow{font-size:11px;flex-shrink:0;margin-top:1px}
+
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;gap:40px;padding:60px 20px 40px}
+  .steps,.chart-grid,.pricing-grid,.testi-grid,.kpi-grid{grid-template-columns:1fr}
+  .g2,.g3{grid-template-columns:1fr}
+  .nav{padding:0 20px}
+  .proof-bar{flex-wrap:wrap;gap:24px}
 }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!--  LANDING PAGE                                          -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- LANDING -->
 <div id="page-land" class="page active">
-
-  <!-- NAV -->
-  <nav class="nav">
-    <span class="logo">OR<span class="logo-x">X</span>ION AI</span>
-    <div class="nav-live"><span class="live-dot"></span>LIVE ENGINE</div>
-    <div style="flex:1"></div>
-    <div class="theme-toggle">
-      <button class="theme-opt active" id="dark-btn" onclick="setTheme('dark')">Dark</button>
-      <button class="theme-opt" id="light-btn" onclick="setTheme('light')">Light</button>
-    </div>
-    <button class="btn-prim" style="margin-left:8px" onclick="goTo('form')">Start Analysis →</button>
-  </nav>
-
-  <!-- TICKER -->
-  <div class="ticker-wrap">
-    <div class="ticker-inner" id="ticker"></div>
+<nav class="nav">
+  <div class="logo-svg">
+    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
+      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
+      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
+      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
+      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    </svg>
   </div>
+  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div class="nav-badge"><span class="live-dot"></span>LIVE ENGINE</div>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Pricing</button>
+  <button class="btn-glow" style="padding:10px 22px;font-size:13px" onclick="goTo('form')">Start Analysis →</button>
+</nav>
 
-  <!-- HERO -->
-  <section style="padding:68px 40px 56px;position:relative;overflow:hidden;background:var(--bg);transition:background .25s">
-    <div class="grid-bg"></div>
-    <div style="position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(59,130,246,.07) 0%,transparent 65%);pointer-events:none"></div>
-    <div style="position:relative;max-width:1060px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center" class="hero-grid">
-      <!-- Left copy -->
-      <div>
-        <div class="fu" style="display:inline-flex;align-items:center;gap:7px;border:1px solid var(--bdr);border-radius:20px;padding:4px 13px 4px 8px;margin-bottom:20px;background:var(--surf)">
-          <span class="live-dot"></span>
-          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--acc);letter-spacing:1.5px">AI BUSINESS DIAGNOSIS ENGINE</span>
-        </div>
-        <h1 class="fu d1" style="font-size:clamp(32px,4.5vw,56px);font-weight:800;line-height:1.03;letter-spacing:-1.5px;color:var(--txt);margin-bottom:16px">
-          Understand your<br>business.<br><span style="color:var(--acc)">Decide with data.</span>
-        </h1>
-        <p class="fu d2" style="font-size:15px;color:var(--txt2);line-height:1.7;margin-bottom:28px;max-width:420px">
-          Input your metrics. AI analyzes 12 business dimensions using Big 4 frameworks and returns a structured strategy report — no consultants needed.
-        </p>
-        <div class="fu d3" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px">
-          <button class="btn-prim btn-prim-lg" onclick="goTo('form')">Run Analysis →</button>
-          <button class="btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See capabilities ↓</button>
-        </div>
-        <div class="fu d4" style="display:flex;gap:32px">
-          <div><div class="mono" style="font-size:22px;font-weight:600;color:var(--txt)">&lt;90s</div><div class="lbl" style="margin-top:2px">time to insight</div></div>
-          <div><div class="mono" style="font-size:22px;font-weight:600;color:var(--txt)">12</div><div class="lbl" style="margin-top:2px">dimensions</div></div>
-          <div><div class="mono" style="font-size:22px;font-weight:600;color:var(--txt)">Big 4</div><div class="lbl" style="margin-top:2px">methodology</div></div>
-        </div>
-      </div>
-      <!-- Right: dashboard preview -->
-      <div class="fu d2">
-        <div class="card card-pad">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <span class="lbl">SAMPLE OUTPUT PREVIEW</span>
-            <div style="display:flex;gap:4px">
-              <span style="width:8px;height:8px;border-radius:50%;background:#ef4444"></span>
-              <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b"></span>
-              <span style="width:8px;height:8px;border-radius:50%;background:#22c55e"></span>
-            </div>
-          </div>
-          <!-- Score + radar mini -->
-          <div style="display:flex;gap:14px;margin-bottom:14px;align-items:center">
-            <svg width="96" height="96" viewBox="0 0 96 96">
-              <circle cx="48" cy="48" r="38" fill="none" stroke="var(--bdr)" stroke-width="7"/>
-              <circle cx="48" cy="48" r="38" fill="none" stroke="#22C55E" stroke-width="7" stroke-dasharray="149 239" stroke-linecap="round" transform="rotate(-90 48 48)"/>
-              <text x="48" y="44" text-anchor="middle" fill="#22C55E" font-size="20" font-weight="700" font-family="DM Mono,monospace">74</text>
-              <text x="48" y="57" text-anchor="middle" fill="var(--txt3)" font-size="7" font-family="DM Mono,monospace" letter-spacing="1">/ 100</text>
-              <text x="48" y="68" text-anchor="middle" fill="#22C55E" font-size="8" font-weight="600" font-family="DM Mono,monospace">STRONG</text>
-            </svg>
-            <div style="flex:1"><canvas id="hero-radar" height="96"></canvas></div>
-          </div>
-          <!-- Metric mini cards -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-            <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px">
-              <div class="lbl" style="margin-bottom:3px">LTV:CAC</div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-end">
-                <span class="mono" style="font-size:16px;font-weight:600;color:var(--grn)">3.2×</span>
-                <canvas id="sp1" width="50" height="18"></canvas>
-              </div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px">
-              <div class="lbl" style="margin-bottom:3px">MARGIN</div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-end">
-                <span class="mono" style="font-size:16px;font-weight:600;color:var(--amb)">28%</span>
-                <canvas id="sp2" width="50" height="18"></canvas>
-              </div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px">
-              <div class="lbl" style="margin-bottom:3px">RUNWAY</div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-end">
-                <span class="mono" style="font-size:16px;font-weight:600;color:var(--red)">6 mo</span>
-                <canvas id="sp3" width="50" height="18"></canvas>
-              </div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px">
-              <div class="lbl" style="margin-bottom:3px">CHURN</div>
-              <div style="display:flex;justify-content:space-between;align-items:flex-end">
-                <span class="mono" style="font-size:16px;font-weight:600;color:var(--acc)">2.1%</span>
-                <canvas id="sp4" width="50" height="18"></canvas>
-              </div>
-            </div>
-          </div>
-          <!-- Mini revenue chart -->
-          <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:7px;padding:10px 11px">
-            <div class="lbl" style="margin-bottom:7px">REVENUE TREND (12 MO)</div>
-            <div style="height:44px"><canvas id="hero-rev"></canvas></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="features" style="padding:72px 40px;border-top:1px solid var(--bdr);background:var(--bg2);transition:background .25s,border-color .25s">
-    <div style="max-width:1060px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:48px">
-        <div class="lbl" style="color:var(--acc);margin-bottom:10px">What you receive</div>
-        <h2 style="font-size:clamp(24px,3.5vw,38px);font-weight:800;color:var(--txt);letter-spacing:-1px">Complete strategic intelligence</h2>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:12px;overflow:hidden" class="feat-grid">
-        <div class="feat-item" style="background:var(--surf);padding:24px"><div class="lbl" style="color:var(--acc);margin-bottom:9px">01</div><div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px">Business Health Score</div><div style="font-size:12px;color:var(--txt3);line-height:1.65">0–100 composite score across 12 operational and financial dimensions.</div></div>
-        <div class="feat-item" style="background:var(--surf);padding:24px"><div class="lbl" style="color:var(--red);margin-bottom:9px">02</div><div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px">Key Problems</div><div style="font-size:12px;color:var(--txt3);line-height:1.65">3–5 critical issues ranked by business impact and urgency.</div></div>
-        <div class="feat-item" style="background:var(--surf);padding:24px"><div class="lbl" style="color:var(--amb);margin-bottom:9px">03</div><div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px">Root Causes</div><div style="font-size:12px;color:var(--txt3);line-height:1.65">Structural, operational, or market factors driving each problem.</div></div>
-        <div class="feat-item" style="background:var(--surf);padding:24px"><div class="lbl" style="color:var(--grn);margin-bottom:9px">04</div><div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px">Strategic Pillars</div><div style="font-size:12px;color:var(--txt3);line-height:1.65">Three focused directions derived from your specific data context.</div></div>
-        <div class="feat-item" style="background:var(--surf);padding:24px"><div class="lbl" style="color:var(--pur);margin-bottom:9px">05</div><div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px">90-Day Action Plan</div><div style="font-size:12px;color:var(--txt3);line-height:1.65">Phased, concrete steps calibrated to your stage and team size.</div></div>
-        <div class="feat-item" style="background:var(--surf);padding:24px"><div class="lbl" style="color:#06B6D4;margin-bottom:9px">06</div><div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px">PDF Export</div><div style="font-size:12px;color:var(--txt3);line-height:1.65">Board-ready report with full analysis, metrics, and charts.</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ANALYTICS PREVIEW -->
-  <section style="padding:72px 40px;border-top:1px solid var(--bdr);transition:border-color .25s">
-    <div style="max-width:1060px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:48px">
-        <div class="lbl" style="color:var(--acc);margin-bottom:10px">Analytics Preview</div>
-        <h2 style="font-size:clamp(22px,3.5vw,36px);font-weight:800;color:var(--txt);letter-spacing:-1px">Data-driven insights, visualized</h2>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px" class="charts-row">
-        <div class="card card-pad">
-          <div class="lbl" style="margin-bottom:12px">HEALTH DIMENSIONS</div>
-          <canvas id="land-radar" height="180"></canvas>
-        </div>
-        <div class="card card-pad">
-          <div class="lbl" style="margin-bottom:12px">REVENUE TRAJECTORY</div>
-          <div style="height:180px"><canvas id="land-rev"></canvas></div>
-        </div>
-        <div class="card card-pad">
-          <div class="lbl" style="margin-bottom:12px">CHANNEL PERFORMANCE</div>
-          <div style="height:180px"><canvas id="land-ch"></canvas></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section style="padding:72px 40px;border-top:1px solid var(--bdr);background:var(--bg2);transition:background .25s,border-color .25s">
-    <div style="max-width:1060px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:48px">
-        <div class="lbl" style="color:var(--acc);margin-bottom:10px">Process</div>
-        <h2 style="font-size:clamp(22px,3.5vw,36px);font-weight:800;color:var(--txt);letter-spacing:-1px">Three steps. Under 90 seconds.</h2>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px" class="steps-grid">
-        <div class="card card-pad" style="position:relative;overflow:hidden">
-          <div class="mono" style="font-size:42px;font-weight:500;color:var(--bdr);line-height:1;margin-bottom:14px;user-select:none">01</div>
-          <div class="lbl" style="color:var(--acc);margin-bottom:7px">STEP 01</div>
-          <div style="font-weight:600;font-size:15px;color:var(--txt);margin-bottom:6px">Input data</div>
-          <div style="font-size:12px;color:var(--txt3);line-height:1.65">Business metrics, financials, team size, active channels. Under 3 minutes.</div>
-          <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--acc);opacity:.4"></div>
-        </div>
-        <div class="card card-pad" style="position:relative;overflow:hidden">
-          <div class="mono" style="font-size:42px;font-weight:500;color:var(--bdr);line-height:1;margin-bottom:14px;user-select:none">02</div>
-          <div class="lbl" style="color:var(--pur);margin-bottom:7px">STEP 02</div>
-          <div style="font-weight:600;font-size:15px;color:var(--txt);margin-bottom:6px">AI analyzes</div>
-          <div style="font-size:12px;color:var(--txt3);line-height:1.65">12 dimensions assessed with Big 4 frameworks and sector benchmarks.</div>
-          <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--pur);opacity:.4"></div>
-        </div>
-        <div class="card card-pad" style="position:relative;overflow:hidden">
-          <div class="mono" style="font-size:42px;font-weight:500;color:var(--bdr);line-height:1;margin-bottom:14px;user-select:none">03</div>
-          <div class="lbl" style="color:var(--grn);margin-bottom:7px">STEP 03</div>
-          <div style="font-weight:600;font-size:15px;color:var(--txt);margin-bottom:6px">Get strategy</div>
-          <div style="font-size:12px;color:var(--txt3);line-height:1.65">Health score, root causes, pillars, 90-day plan. Instant PDF export.</div>
-          <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--grn);opacity:.4"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- DIFF SECTION -->
-  <section style="padding:72px 40px;border-top:1px solid var(--bdr);transition:border-color .25s">
-    <div style="max-width:1060px;margin:0 auto">
-      <div style="text-align:center;margin-bottom:48px">
-        <div class="lbl" style="color:var(--acc);margin-bottom:10px">Why Orxion</div>
-        <h2 style="font-size:clamp(22px,3.5vw,36px);font-weight:800;color:var(--txt);letter-spacing:-1px">Not a dashboard. A decision engine.</h2>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="diff-grid">
-        <div class="card card-pad">
-          <div style="display:inline-block;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:5px;padding:3px 11px;margin-bottom:18px;font-family:'DM Mono',monospace;font-size:9px;color:var(--red);letter-spacing:1px;font-weight:700">OTHERS GIVE YOU</div>
-          <div style="display:flex;flex-direction:column;gap:9px">
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt3)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Dashboards full of charts</div>
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt3)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Vanity metrics</div>
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt3)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Generic best-practice tips</div>
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt3)"><span style="color:var(--red);font-weight:700;flex-shrink:0">✕</span>Raw data without meaning</div>
-          </div>
-        </div>
-        <div class="card card-pad">
-          <div style="display:inline-block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);border-radius:5px;padding:3px 11px;margin-bottom:18px;font-family:'DM Mono',monospace;font-size:9px;color:var(--grn);letter-spacing:1px;font-weight:700">ORXION GIVES YOU</div>
-          <div style="display:flex;flex-direction:column;gap:9px">
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt)"><span style="color:var(--grn);font-weight:700;flex-shrink:0">→</span>Business diagnosis</div>
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt)"><span style="color:var(--grn);font-weight:700;flex-shrink:0">→</span>Ranked priorities</div>
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt)"><span style="color:var(--grn);font-weight:700;flex-shrink:0">→</span>Root cause analysis</div>
-            <div style="display:flex;gap:9px;align-items:center;font-size:14px;color:var(--txt)"><span style="color:var(--grn);font-weight:700;flex-shrink:0">→</span>Concrete 90-day plan</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section style="padding:72px 40px;border-top:1px solid var(--bdr);text-align:center;position:relative;overflow:hidden;transition:border-color .25s">
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(59,130,246,.08) 0%,transparent 70%);pointer-events:none"></div>
-    <div style="position:relative;max-width:520px;margin:0 auto">
-      <h2 style="font-size:clamp(28px,5vw,52px);font-weight:800;color:var(--txt);letter-spacing:-1.5px;line-height:1;margin-bottom:14px">Stop guessing.<br><span style="color:var(--acc)">Start deciding.</span></h2>
-      <p style="font-size:15px;color:var(--txt2);margin-bottom:28px;line-height:1.65">Get your complete business diagnosis in under 90 seconds.</p>
-      <button class="btn-prim btn-prim-lg" onclick="goTo('form')">Run Analysis →</button>
-    </div>
-  </section>
-
-  <footer style="border-top:1px solid var(--bdr);padding:18px 40px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);transition:background .25s,border-color .25s">
-    <span class="logo" style="font-size:14px">OR<span class="logo-x">X</span>ION AI</span>
-    <span class="lbl">BUSINESS DIAGNOSIS ENGINE · 2025</span>
-  </footer>
+<div class="ticker-wrap">
+  <div class="ticker-inner" id="ticker-el"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!--  INPUT FORM                                            -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- HERO -->
+<section style="position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(79,142,247,.04) 0%,transparent 60%)">
+<div class="hero" style="max-width:1200px;margin:0 auto">
+  <div class="hero-orb orb-a"></div>
+  <div class="hero-orb orb-b"></div>
+  <div class="hero-orb orb-c"></div>
+  <div style="position:relative;z-index:1">
+    <div class="hero-eyebrow fu"><span class="live-dot"></span>AI-Powered Business Diagnosis</div>
+    <h1 class="hero-h1 fu d1">Stop guessing.<br>Start<br><span class="grad">deciding.</span></h1>
+    <p class="hero-sub fu d2">Orxion AI analyzes your business across 12 dimensions using Big 4 frameworks and delivers a McKinsey-grade strategy report — in under 90 seconds.</p>
+    <div class="hero-actions fu d3">
+      <button class="btn-glow" style="font-size:16px;padding:16px 34px" onclick="goTo('form')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l7 7-7 7M15 8H1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Run Free Analysis
+      </button>
+      <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
+    </div>
+    <div class="hero-stats fu d4">
+      <div><div class="hero-stat-val" id="stat-time">0s</div><div class="hero-stat-lbl">Time to insight</div></div>
+      <div style="width:1px;background:var(--bdr)"></div>
+      <div><div class="hero-stat-val" id="stat-dims">0</div><div class="hero-stat-lbl">Dimensions scored</div></div>
+      <div style="width:1px;background:var(--bdr)"></div>
+      <div><div class="hero-stat-val">Big 4</div><div class="hero-stat-lbl">Methodology</div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD PREVIEW — compact -->
+  <div class="fu d2" style="position:relative;z-index:1">
+    <div class="dash-preview" style="padding:16px">
+      <div class="dash-header" style="margin-bottom:12px">
+        <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase">Sample Report</span>
+        <div class="dash-dots"><div class="dash-dot" style="background:#FF5B5B"></div><div class="dash-dot" style="background:#F5A623"></div><div class="dash-dot" style="background:#22D47A"></div></div>
+      </div>
+      <!-- Score + summary line -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bdr)">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+          <circle cx="32" cy="32" r="26" fill="none" stroke="url(#sg)" stroke-width="5" stroke-dasharray="0 163" stroke-linecap="round" transform="rotate(-90 32 32)" id="hero-ring-arc"/>
+          <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
+          <text x="32" y="29" text-anchor="middle" fill="#fff" font-size="14" font-weight="800" font-family="Inter,sans-serif" id="hero-score-num">0</text>
+          <text x="32" y="40" text-anchor="middle" fill="#22D47A" font-size="7" font-weight="600" font-family="Inter,sans-serif">STRONG</text>
+        </svg>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:600;color:#fff;margin-bottom:3px">Acme Analytics · SaaS</div>
+          <div style="font-size:11px;color:var(--txt3);line-height:1.5">CAC exceeds LTV in 2 of 3 segments. Immediate action required on pricing structure.</div>
+        </div>
+      </div>
+      <!-- 4 mini metrics -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">LTV:CAC</div><div style="font-size:14px;font-weight:700;color:var(--grn)">3.2×</div></div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">MARGIN</div><div style="font-size:14px;font-weight:700;color:var(--amb)">28%</div></div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">RUNWAY</div><div style="font-size:14px;font-weight:700;color:var(--red)">6 mo</div></div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">CHURN</div><div style="font-size:14px;font-weight:700;color:var(--blue)">2.1%</div></div>
+      </div>
+      <!-- Revenue sparkline -->
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px">
+        <div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:6px;letter-spacing:1px">REVENUE TREND</div>
+        <div style="height:36px"><canvas id="hero-rev"></canvas></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.15);border-radius:7px">
+        <div style="width:5px;height:5px;border-radius:50%;background:var(--blue);animation:pulse 1.5s ease infinite;flex-shrink:0"></div>
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue2)">3 critical issues identified · Report ready in 74s</span>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SOCIAL PROOF BAR -->
+<div class="proof-bar" style="border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);background:var(--bg2)">
+  <div class="proof-stat"><div class="proof-val">&lt; 90s</div><div class="proof-lbl">FULL REPORT IN YOUR HANDS</div></div>
+  <div style="width:1px;height:48px;background:var(--bdr)"></div>
+  <div class="proof-stat"><div class="proof-val">12</div><div class="proof-lbl">DIMENSIONS SCORED</div></div>
+  <div style="width:1px;height:48px;background:var(--bdr)"></div>
+  <div class="proof-stat"><div class="proof-val">Free</div><div class="proof-lbl">TO START — NO CARD NEEDED</div></div>
+  <div style="width:1px;height:48px;background:var(--bdr)"></div>
+  <div class="proof-stat"><div class="proof-val">Big 4</div><div class="proof-lbl">STRATEGY FRAMEWORKS</div></div>
+</div>
+
+<!-- FEATURES -->
+<div class="feat-section">
+  <div class="section-tag">What you get</div>
+  <h2 class="section-h">McKinsey-grade analysis.<br>In 90 seconds.</h2>
+  <p class="section-sub">We don't give you dashboards. We give you the same structured diagnosis that top strategy consultants charge $50,000 for — powered by AI and delivered instantly.</p>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-num" style="color:var(--blue)">01</div>
+      <div class="feat-title">Business Health Score</div>
+      <div class="feat-desc">0–100 composite score across 12 operational and financial dimensions. Know exactly where you stand, not just how you feel.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num" style="color:var(--red)">02</div>
+      <div class="feat-title">Key Problems Ranked</div>
+      <div class="feat-desc">3–5 critical issues ranked by impact and urgency. Stop firefighting and focus on what actually matters.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num" style="color:var(--amb)">03</div>
+      <div class="feat-title">Root Cause Analysis</div>
+      <div class="feat-desc">Structural, operational, and market-level causes behind each problem. Fix the disease, not the symptoms.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num" style="color:var(--grn)">04</div>
+      <div class="feat-title">Strategic Pillars</div>
+      <div class="feat-desc">Three focused strategic directions derived from your specific data. Not generic advice — your actual situation.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num" style="color:var(--pur)">05</div>
+      <div class="feat-title">90-Day Action Plan</div>
+      <div class="feat-desc">Phased, concrete steps calibrated to your stage and team size. Know exactly what to do Monday morning.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-num" style="color:var(--cyan)">06</div>
+      <div class="feat-title">Global Benchmarking</div>
+      <div class="feat-desc">How does your business compare to peers in your sector and stage? Benchmarked against real market data.</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="proof-section" id="how">
+  <div class="proof-inner">
+    <div style="text-align:center;margin-bottom:52px">
+      <div class="section-tag">Process</div>
+      <h2 class="section-h">Three steps. Under 90 seconds.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Input your data</div>
+        <div class="step-desc">Business metrics, financials, team size, active channels. Upload financial statements if you have them. Under 3 minutes.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">AI analyzes</div>
+        <div class="step-desc">12 business dimensions assessed with Big 4 frameworks, global peer benchmarking, and root cause modeling.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Get your strategy</div>
+        <div class="step-desc">Health score, root causes, pillars, 90-day plan with impact sizing. Export a board-ready PDF instantly.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALYTICS PREVIEW -->
+<div class="analytics-section">
+  <div style="text-align:center;margin-bottom:48px">
+    <div class="section-tag">Live analytics</div>
+    <h2 class="section-h">Data-driven insights,<br>beautifully visualized</h2>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="chart-title">Health dimensions</div>
+      <canvas id="land-radar" height="180"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue trajectory</div>
+      <div style="height:180px"><canvas id="land-rev"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Channel performance</div>
+      <div style="height:180px"><canvas id="land-ch"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- DIFFERENTIATION -->
+<div style="padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:52px">
+      <div class="section-tag">Why Orxion</div>
+      <h2 class="section-h">Not a dashboard.<br>A decision engine.</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="border:1px solid rgba(255,91,91,.2);border-radius:16px;padding:32px;background:rgba(255,91,91,.04)">
+        <div style="display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--red);background:rgba(255,91,91,.1);border:1px solid rgba(255,91,91,.2);border-radius:20px;padding:3px 12px;margin-bottom:20px;letter-spacing:1px;font-weight:700">OTHERS GIVE YOU</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Dashboards full of charts</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Vanity metrics</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Generic best-practice tips</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Raw data without meaning</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>$50,000 consulting bills</div>
+        </div>
+      </div>
+      <div style="border:1px solid rgba(34,212,122,.25);border-radius:16px;padding:32px;background:rgba(34,212,122,.04);position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(34,212,122,.1),transparent 70%);pointer-events:none"></div>
+        <div style="display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);border:1px solid rgba(34,212,122,.25);border-radius:20px;padding:3px 12px;margin-bottom:20px;letter-spacing:1px;font-weight:700">ORXION GIVES YOU</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Business diagnosis with root causes</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Ranked priorities by impact</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Global peer benchmarking</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Concrete 90-day action plan</div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Board-ready PDF in 90 seconds</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<div class="testi-section">
+  <div style="max-width:1200px;margin:0 auto;text-align:center">
+    <div class="section-tag">Social proof</div>
+    <h2 class="section-h">Trusted by founders<br>and executives</h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-txt">"We spent 3 months trying to figure out why growth stalled. Orxion identified the root cause in 90 seconds — our CAC had quietly exceeded LTV. Game changer."</div>
+      <div class="testi-author">
+        <div class="testi-avatar">AK</div>
+        <div><div class="testi-name">Anar Kerimov</div><div class="testi-role">CEO · SaaS startup, Baku</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-txt">"I used to pay a consultant AZN 8,000 for a report like this. Orxion gave me a better one in 60 seconds. The 90-day action plan alone was worth it."</div>
+      <div class="testi-author">
+        <div class="testi-avatar">LH</div>
+        <div><div class="testi-name">Leyla Həsənova</div><div class="testi-role">Founder · E-commerce, Tbilisi</div></div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="testi-stars">★★★★★</div>
+      <div class="testi-txt">"The benchmarking section opened our eyes. We thought we were performing well until we saw how far behind peers we were on margin. Restructured our entire cost base."</div>
+      <div class="testi-author">
+        <div class="testi-avatar">RM</div>
+        <div><div class="testi-name">Rauf Məmmədov</div><div class="testi-role">CFO · Logistics company</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-section" id="pricing">
+  <div style="text-align:center;margin-bottom:0">
+    <div class="section-tag">Pricing</div>
+    <h2 class="section-h">Start free. Scale fast.</h2>
+    <p style="font-size:16px;color:var(--txt2);margin-top:12px">No credit card required. Full report on first analysis.</p>
+  </div>
+  <div class="pricing-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
+
+    <!-- FREE -->
+    <div class="pricing-card">
+      <div class="pricing-name">Free</div>
+      <div class="pricing-price">$0</div>
+      <div class="pricing-per">forever · no card needed</div>
+      <div class="pricing-features">
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Business health score (0–100)</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Top 3 problems identified</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>1 analysis per month</div>
+        <div class="pricing-feat"><span style="color:var(--txt3)">✗</span><span style="color:var(--txt3)">Full strategy report</span></div>
+        <div class="pricing-feat"><span style="color:var(--txt3)">✗</span><span style="color:var(--txt3)">PDF export</span></div>
+        <div class="pricing-feat"><span style="color:var(--txt3)">✗</span><span style="color:var(--txt3)">Benchmarking</span></div>
+      </div>
+      <button class="btn-ghost" style="width:100%;padding:12px" onclick="goTo('form')">Get started free</button>
+    </div>
+
+    <!-- PRO -->
+    <div class="pricing-card featured">
+      <div class="pricing-badge">MOST POPULAR</div>
+      <div class="pricing-name">Pro</div>
+      <div class="pricing-price">$149</div>
+      <div class="pricing-per">per month · cancel anytime</div>
+      <div class="pricing-features">
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>3 full analyses per month</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>McKinsey-grade strategy report</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Global peer benchmarking</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Board-ready PDF export</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>90-day action plan</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Root cause analysis</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Financial document upload</div>
+      </div>
+      <button class="btn-glow" style="width:100%;justify-content:center;font-size:14px;padding:13px" onclick="goTo('form')">Start Pro →</button>
+    </div>
+
+    <!-- EXCLUSIVE -->
+    <div class="pricing-card" style="border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.04);position:relative;overflow:hidden">
+      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(167,139,250,.12),transparent 70%);pointer-events:none"></div>
+      <div style="display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:20px;padding:3px 12px;margin-bottom:14px;letter-spacing:1px;font-weight:700">EXCLUSIVE</div>
+      <div class="pricing-name">Exclusive</div>
+      <div class="pricing-price" style="background:linear-gradient(135deg,#A78BFA,#7B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">$499</div>
+      <div class="pricing-per">per month · dedicated support</div>
+      <div class="pricing-features">
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Everything in Pro</div>
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Unlimited analyses</div>
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>2× monthly expert strategy sessions</div>
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Live review of your AI report with expert</div>
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Custom industry deep-dive</div>
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Priority Slack/email support</div>
+        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Quarterly strategic roadmap review</div>
+      </div>
+      <button class="btn-glow" style="width:100%;justify-content:center;font-size:14px;padding:13px;background:linear-gradient(135deg,#A78BFA,#7B5CF6)" onclick="goTo('form')">Apply for Exclusive →</button>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="pricing-card">
+      <div class="pricing-name">Enterprise</div>
+      <div class="pricing-price">Custom</div>
+      <div class="pricing-per">annual contract · team access</div>
+      <div class="pricing-features">
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Everything in Exclusive</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Team workspace (up to 20 users)</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Custom industry benchmarks</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>White-label PDF reports</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>API access + integrations</div>
+        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Dedicated strategy consultant</div>
+      </div>
+      <button class="btn-ghost" style="width:100%;padding:12px">Contact sales</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div style="position:relative;max-width:640px;margin:0 auto">
+    <h2 class="cta-h">Your competitors<br>already know.<br><span class="grad">Do you?</span></h2>
+    <p style="font-size:17px;color:var(--txt2);margin-bottom:36px;line-height:1.7">Get your complete business diagnosis in under 90 seconds. Free to start.</p>
+    <button class="btn-glow" style="font-size:17px;padding:18px 42px" onclick="goTo('form')">
+      Run Analysis Now — It's Free →
+    </button>
+    <div style="margin-top:16px;font-size:12px;color:var(--txt3);font-family:'JetBrains Mono',monospace">No credit card · No signup required · 90 seconds</div>
+  </div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo-mark" style="width:24px;height:24px;font-size:10px">O</div>
+    <span style="font-weight:700;font-size:14px;letter-spacing:-0.3px">Orxion AI</span>
+  </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:1px">BUSINESS DIAGNOSIS ENGINE · 2025</div>
+</footer>
+</div>
+
+<!-- FORM -->
 <div id="page-form" class="page">
-  <nav class="nav">
-    <span class="logo">OR<span class="logo-x">X</span>ION AI</span>
-    <div style="flex:1"></div>
-    <div class="theme-toggle">
-      <button class="theme-opt active" id="dark-btn2" onclick="setTheme('dark')">Dark</button>
-      <button class="theme-opt" id="light-btn2" onclick="setTheme('light')">Light</button>
-    </div>
-    <button class="btn-ghost" style="margin-left:8px" onclick="goTo('land')">← Back</button>
-  </nav>
-  <div style="background:var(--bg2);min-height:calc(100vh - 56px);padding:0;transition:background .25s">
-    <div style="max-width:620px;margin:0 auto;padding:44px 24px 88px">
-      <div class="fu" style="margin-bottom:32px">
-        <div class="lbl" style="color:var(--acc);margin-bottom:9px">Business Diagnosis</div>
-        <h1 style="font-size:26px;font-weight:800;color:var(--txt);letter-spacing:-0.8px;margin-bottom:8px">Tell us about your business</h1>
-        <p style="font-size:13px;color:var(--txt3);line-height:1.7">Required: name, industry, stage. More data = more precise diagnosis.</p>
+<nav class="nav">
+  <div class="logo-svg">
+    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
+      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
+      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
+      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
+      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    </svg>
+  </div>
+  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="goTo('land')">← Back</button>
+</nav>
+<div class="form-wrap">
+<div class="form-inner">
+  <div class="form-header fu">
+    <span class="form-tag">Business Diagnosis</span>
+    <div class="form-h1">Tell us about your business</div>
+    <p class="form-sub">Required: name, industry, stage. More data = more precise diagnosis. Takes under 3 minutes.</p>
+  </div>
+  <div id="form-error" class="form-error"></div>
+  <div class="form-card fu d1">
+
+    <!-- 01 -->
+    <div style="margin-bottom:28px">
+      <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Company Profile</span></div>
+      <div style="margin-bottom:12px">
+        <label class="field-lbl">Business Name<span class="field-req">*</span></label>
+        <input class="fi" id="f-name" placeholder="e.g. Acme Analytics">
       </div>
-      <div id="form-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:10px 13px;margin-bottom:20px;color:var(--red);font-size:12px;font-family:'DM Mono',monospace"></div>
-      <div class="card fu d1" style="padding:26px">
-
-        <!-- 01 -->
-        <div style="margin-bottom:28px">
-          <div class="form-sec-hdr"><span class="form-sec-num">1</span><span class="form-sec-title">Company Profile</span></div>
-          <div style="margin-bottom:12px">
-            <label class="field-label">Business Name<span class="field-req">*</span></label>
-            <input class="fi" id="f-name" placeholder="e.g. Acme Analytics">
-          </div>
-          <div class="g2">
-            <div>
-              <label class="field-label">Industry<span class="field-req">*</span></label>
-              <select class="fi fi-sel" id="f-industry">
-                <option value="">Select…</option>
-                <option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option>
-                <option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option>
-                <option>Professional Services</option><option>Education</option><option>Media</option>
-                <option>Logistics</option><option>Other</option>
-              </select>
-            </div>
-            <div>
-              <label class="field-label">Growth Stage<span class="field-req">*</span></label>
-              <select class="fi fi-sel" id="f-stage">
-                <option value="">Select…</option>
-                <option>Pre-revenue</option><option>Early Stage</option><option>Growth</option>
-                <option>Scale-up</option><option>Established</option>
-              </select>
-            </div>
-          </div>
+      <div class="g2">
+        <div>
+          <label class="field-lbl">Industry<span class="field-req">*</span></label>
+          <select class="fi fi-sel" id="f-industry">
+            <option value="">Select…</option>
+            <option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option>
+            <option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option>
+            <option>Professional Services</option><option>Education</option><option>Media</option>
+            <option>Logistics</option><option>Other</option>
+          </select>
         </div>
-
-        <!-- 02 -->
-        <div style="margin-bottom:28px">
-          <div class="form-sec-hdr"><span class="form-sec-num">2</span><span class="form-sec-title">Financial Metrics</span></div>
-          <div class="g2" style="margin-bottom:12px">
-            <div><label class="field-label">Monthly Revenue ($)</label><input class="fi" type="number" id="f-rev" placeholder="0"></div>
-            <div><label class="field-label">Monthly Costs ($)</label><input class="fi" type="number" id="f-costs" placeholder="0"></div>
-          </div>
-          <div class="g3" style="margin-bottom:12px">
-            <div><label class="field-label">CAC ($)</label><input class="fi" type="number" id="f-cac" placeholder="—"></div>
-            <div><label class="field-label">LTV ($)</label><input class="fi" type="number" id="f-ltv" placeholder="—"></div>
-            <div><label class="field-label">Conversion %</label><input class="fi" type="number" id="f-conv" placeholder="—"></div>
-          </div>
-          <div style="max-width:50%"><label class="field-label">Team Size</label><input class="fi" type="number" id="f-team" placeholder="—"></div>
+        <div>
+          <label class="field-lbl">Growth Stage<span class="field-req">*</span></label>
+          <select class="fi fi-sel" id="f-stage">
+            <option value="">Select…</option>
+            <option>Pre-revenue</option><option>Early Stage</option><option>Growth</option>
+            <option>Scale-up</option><option>Established</option>
+          </select>
         </div>
-
-        <!-- 03 -->
-        <div style="margin-bottom:28px">
-          <div class="form-sec-hdr"><span class="form-sec-num">3</span><span class="form-sec-title">Marketing Channels</span></div>
-          <label class="field-label" style="margin-bottom:8px">Active Channels</label>
-          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px" id="channels-wrap"></div>
-          <div>
-            <label class="field-label">Website URL</label>
-            <input class="fi" id="f-web" placeholder="https://…">
-          </div>
-        </div>
-
-        <!-- 04 -->
-        <div style="margin-bottom:24px">
-          <div class="form-sec-hdr"><span class="form-sec-num">4</span><span class="form-sec-title">Financial Document (Optional)</span></div>
-          <div id="upload-zone" onclick="document.getElementById('f-file').click()"
-            style="border:1px dashed var(--bdr);border-radius:8px;padding:24px 20px;text-align:center;cursor:pointer;background:var(--bg2);transition:all .2s">
-            <input type="file" id="f-file" accept=".pdf" style="display:none" onchange="handleFile(this)">
-            <div id="upload-icon" style="font-size:20px;margin-bottom:6px">📄</div>
-            <div id="upload-label" class="lbl">Upload PDF · Financial statements, P&L, reports</div>
-          </div>
-        </div>
-
-        <button class="btn-submit" onclick="runAnalysis()">Run Strategic Analysis →</button>
-        <p style="text-align:center;margin-top:9px;font-size:11px;color:var(--txt3);font-family:'DM Mono',monospace;letter-spacing:1px">COMPLETES IN 60–90 SECONDS</p>
       </div>
     </div>
+
+    <!-- 02 -->
+    <div style="margin-bottom:28px">
+      <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Financial Metrics</span></div>
+      <div class="g2" style="margin-bottom:12px">
+        <div><label class="field-lbl">Monthly Revenue ($)</label><input class="fi" type="number" id="f-rev" placeholder="0"></div>
+        <div><label class="field-lbl">Monthly Costs ($)</label><input class="fi" type="number" id="f-costs" placeholder="0"></div>
+      </div>
+      <div class="g3" style="margin-bottom:12px">
+        <div><label class="field-lbl">CAC ($)</label><input class="fi" type="number" id="f-cac" placeholder="—"></div>
+        <div><label class="field-lbl">LTV ($)</label><input class="fi" type="number" id="f-ltv" placeholder="—"></div>
+        <div><label class="field-lbl">Conversion %</label><input class="fi" type="number" id="f-conv" placeholder="—"></div>
+      </div>
+      <div style="max-width:50%"><label class="field-lbl">Team Size</label><input class="fi" type="number" id="f-team" placeholder="—"></div>
+    </div>
+
+    <!-- 03 -->
+    <div style="margin-bottom:28px">
+      <div class="sec-hdr"><span class="sec-num">3</span><span class="sec-title">Marketing Channels</span></div>
+      <label class="field-lbl" style="margin-bottom:9px">Active Channels</label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px" id="channels-wrap"></div>
+      <div><label class="field-lbl">Website URL</label><input class="fi" id="f-web" placeholder="https://…"></div>
+    </div>
+
+    <button class="btn-submit" onclick="runAnalysis()">
+      Run Strategic Analysis →
+    </button>
+    <p style="text-align:center;margin-top:10px;font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px">COMPLETES IN 60–90 SECONDS · POWERED BY CLAUDE AI</p>
   </div>
 </div>
+</div>
+</div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!--  LOADING                                               -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- LOADING -->
 <div id="page-load" class="page">
-  <nav class="nav">
-    <span class="logo">OR<span class="logo-x">X</span>ION AI</span>
-    <div style="flex:1"></div>
-    <div class="nav-live"><span class="live-dot"></span>ANALYZING</div>
-  </nav>
-  <div class="load-wrap">
-    <div style="position:relative;width:96px;height:96px;margin-bottom:32px">
-      <svg width="96" height="96" viewBox="0 0 96 96" class="spin-ring" style="position:absolute;inset:0">
-        <circle cx="48" cy="48" r="42" fill="none" stroke="var(--bdr)" stroke-width="1.5"/>
-        <circle cx="48" cy="48" r="42" fill="none" stroke="var(--acc)" stroke-width="2" stroke-dasharray="55 209" stroke-linecap="round"/>
-      </svg>
-      <svg width="96" height="96" viewBox="0 0 96 96" class="spin-ring-rev" style="position:absolute;inset:0">
-        <circle cx="48" cy="48" r="32" fill="none" stroke="var(--bdr)" stroke-width="1"/>
-        <circle cx="48" cy="48" r="32" fill="none" stroke="var(--pur)" stroke-width="1.5" stroke-dasharray="28 173" stroke-linecap="round"/>
-      </svg>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-        <div style="width:7px;height:7px;border-radius:50%;background:var(--acc)"></div>
-      </div>
-    </div>
-    <div class="lbl" style="color:var(--txt3);margin-bottom:9px">ORXION AI · ANALYZING</div>
-    <div id="load-msg" style="font-size:16px;font-weight:500;color:var(--txt2);margin-bottom:4px">Processing…</div>
-  <div id="api-key-setup" style="display:none;margin-top:28px;max-width:420px;width:100%">
-    <div style="font-size:12px;color:var(--red);margin-bottom:12px;font-family:'DM Mono',monospace">API key not set. Enter your Anthropic key:</div>
-    <div style="display:flex;gap:8px">
-      <input id="api-key-input" type="password" placeholder="sk-ant-..." style="flex:1;padding:9px 12px;background:var(--surf);border:1px solid var(--bdr);border-radius:6px;color:var(--txt);font-size:13px;outline:none">
-      <button onclick="setApiKeyAndRetry()" style="background:var(--acc);color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px">Set & Retry</button>
-    </div>
-    <div style="font-size:11px;color:var(--txt3);margin-top:8px;font-family:'DM Mono',monospace">Get your key: console.anthropic.com</div>
+<nav class="nav">
+  <div class="logo-svg">
+    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
+      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
+      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
+      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
+      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    </svg>
   </div>
-    <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
-    <div id="load-pct" class="lbl" style="margin-top:8px">0%</div>
+  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div style="flex:1"></div>
+  <div class="nav-badge"><span class="live-dot"></span>ANALYZING</div>
+</nav>
+<div class="load-wrap">
+  <div class="load-rings">
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div class="ring ring3"></div>
+    <div class="ring-core"></div>
   </div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">ORXION AI · ANALYZING</div>
+  <div id="load-msg" style="font-size:17px;font-weight:600;color:var(--txt2);margin-bottom:4px">Processing…</div>
+  <div class="prog-bar">
+    <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+    <div class="prog-shimmer"></div>
+  </div>
+  <div id="load-pct" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);margin-top:9px">0%</div>
+</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!--  REPORT                                                -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<!-- REPORT -->
 <div id="page-rep" class="page">
-  <nav class="nav">
-    <span class="logo">OR<span class="logo-x">X</span>ION AI</span>
-    <div style="flex:1"></div>
-    <div class="theme-toggle">
-      <button class="theme-opt active" id="dark-btn3" onclick="setTheme('dark')">Dark</button>
-      <button class="theme-opt" id="light-btn3" onclick="setTheme('light')">Light</button>
-    </div>
-    <button class="btn-ghost" style="margin-left:8px" onclick="resetApp()">↺ New</button>
-    <button class="btn-prim" style="margin-left:8px;font-size:12px;padding:8px 16px" onclick="exportPDF()">↓ Export PDF</button>
-  </nav>
-  <div style="background:var(--bg2);min-height:calc(100vh - 56px);transition:background .25s">
-    <div style="max-width:960px;margin:0 auto;padding:24px 24px 80px" id="report-body">
-      <!-- Filled by JS -->
-    </div>
+<nav class="nav">
+  <div class="logo-svg">
+    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
+      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
+      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
+      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
+      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
+      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    </svg>
   </div>
+  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="resetApp()">↺ New</button>
+  <button class="btn-glow" style="padding:9px 18px;font-size:12px" onclick="exportPDF()">↓ Export PDF</button>
+</nav>
+<div class="rep-body">
+  <div class="rep-inner" id="report-body"></div>
+</div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════ -->
-<!--  JAVASCRIPT                                            -->
-<!-- ═══════════════════════════════════════════════════════ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-/* ── State ─────────────────────────────────────────────── */
-// ─── SET YOUR API KEY HERE ───────────────────────────────
-// Get your key from: https://console.anthropic.com
-window.ORXION_API_KEY = 'YOUR_API_KEY_HERE';
-// ─────────────────────────────────────────────────────────
+const CHANNELS=['Organic Search','Paid Search','LinkedIn','Instagram','Facebook','Email','Content / SEO','Referral'];
+const TICKER=['REVENUE GROWTH +24%','LTV:CAC 4.2×','BURN RATE $42K/MO','GROSS MARGIN 68%','CHURN 2.1%','ARR $840K','PAYBACK 11 MO','NPS SCORE 54','CAC $120','PIPELINE $1.2M'];
+let appState={form:{},report:null,fdata:null,pct:0,loadInt:null,pctInt:null};
+let selectedChannels=[];
+let charts={};
 
-let appState = {
-  dark: true,
-  formData: null,
-  report: null,
-  pdfName: '',
-  pct: 0,
-  loadInterval: null,
-  pctInterval: null
-};
+function goTo(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');window.scrollTo(0,0);if(p==='land'){initLandCharts();animateHero()}}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+function scHex(s){return s>=70?'#22D47A':s>=45?'#F5A623':'#FF5B5B'}
+function scLbl(s){return s>=70?'STRONG':s>=45?'AT RISK':'CRITICAL'}
 
-const CHANNELS = ['Organic Search','Paid Search','LinkedIn','Instagram','Facebook','Email','Content / SEO','Referral'];
-const TICKER_ITEMS = ['REVENUE GROWTH +24%','LTV:CAC 4.2×','BURN RATE $42K/MO','GROSS MARGIN 68%','CHURN 2.1%','ARR $840K','PAYBACK 11 MO','NPS SCORE 54','CAC $120','PIPELINE $1.2M','MRR $70K','RUNWAY 8 MO'];
-let selectedChannels = [];
-let charts = {};
+/* TICKER */
+function initTicker(){
+  const el=document.getElementById('ticker-el');
+  if(!el)return;
+  const items=[...TICKER,...TICKER,...TICKER];
+  el.innerHTML=items.map((t,i)=>`<span class="tick-item"><span class="tick-up">▸</span>${t}</span>`).join('');
+}
 
-/* ── Theme ──────────────────────────────────────────────── */
-function setTheme(t) {
-  appState.dark = t === 'dark';
-  document.body.className = appState.dark ? '' : 'light';
-  ['dark-btn','dark-btn2','dark-btn3'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.className = 'theme-opt' + (appState.dark ? ' active' : '');
-  });
-  ['light-btn','light-btn2','light-btn3'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.className = 'theme-opt' + (!appState.dark ? ' active' : '');
-  });
-  // Rebuild charts with new colors
-  if (document.getElementById('page-land').classList.contains('active')) {
-    initLandCharts();
+/* CHANNELS */
+function initChannels(){
+  const w=document.getElementById('channels-wrap');
+  if(!w)return;
+  w.innerHTML=CHANNELS.map(ch=>`<button class="ch-pill${selectedChannels.includes(ch)?' on':''}" onclick="toggleCh('${ch}')">${ch}</button>`).join('');
+}
+function toggleCh(ch){const i=selectedChannels.indexOf(ch);i>=0?selectedChannels.splice(i,1):selectedChannels.push(ch);initChannels()}
+
+/* ANIMATE HERO STATS */
+function animateCounter(el,target,suffix,duration){
+  let start=null,from=0;
+  function step(ts){
+    if(!start)start=ts;
+    const p=Math.min((ts-start)/duration,1);
+    const val=Math.round(from+(target-from)*p);
+    el.textContent=val+suffix;
+    if(p<1)requestAnimationFrame(step);
   }
+  requestAnimationFrame(step);
+}
+function animateHero(){
+  setTimeout(()=>{
+    const st=document.getElementById('stat-time');
+    const sd=document.getElementById('stat-dims');
+    if(st)animateCounter(st,90,'s',1200);
+    if(sd)animateCounter(sd,12,'',1000);
+    // Animate score ring
+    const arc=document.getElementById('hero-ring-arc');
+    const num=document.getElementById('hero-score-num');
+    if(arc&&num){
+      let score=0;
+      const target=74;
+      const total=163;
+      const int=setInterval(()=>{
+        score+=1;
+        const fill=(score/100)*total;
+        arc.setAttribute('stroke-dasharray',fill.toFixed(1)+' '+total);
+        num.textContent=score;
+        if(score>=target)clearInterval(int);
+      },18);
+    }
+  },400);
 }
 
-/* ── Pages ──────────────────────────────────────────────── */
-function goTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  window.scrollTo(0, 0);
-  if (page === 'land') initLandCharts();
-}
+/* CHART COLORS */
+function gc(){return{grid:'rgba(255,255,255,.06)',text:'#4A5568'}}
 
-/* ── Ticker init ────────────────────────────────────────── */
-function initTicker() {
-  const wrap = document.getElementById('ticker');
-  if (!wrap) return;
-  const items = [...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS];
-  wrap.innerHTML = items.map(t =>
-    `<span style="padding:0 24px;font-family:'DM Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:1.5px">▸ ${t}</span>`
-  ).join('');
-}
-
-/* ── Channel pills ──────────────────────────────────────── */
-function initChannels() {
-  const wrap = document.getElementById('channels-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = CHANNELS.map(ch =>
-    `<button class="ch-pill${selectedChannels.includes(ch) ? ' on' : ''}" onclick="toggleChannel('${ch}')">${ch}</button>`
-  ).join('');
-}
-function toggleChannel(ch) {
-  const i = selectedChannels.indexOf(ch);
-  if (i >= 0) selectedChannels.splice(i, 1);
-  else selectedChannels.push(ch);
-  initChannels();
-}
-function handleFile(input) {
-  if (!input.files[0]) return;
-  appState.pdfName = input.files[0].name;
-  document.getElementById('upload-icon').textContent = '✅';
-  document.getElementById('upload-label').textContent = appState.pdfName;
-  document.getElementById('upload-label').style.color = 'var(--grn)';
-}
-
-/* ── Chart helpers ──────────────────────────────────────── */
-function destroyChart(id) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-}
-function chartColors() {
-  const dark = appState.dark;
-  return {
-    grid: dark ? 'rgba(30,41,59,.5)' : 'rgba(226,232,240,.6)',
-    text: dark ? '#475569' : '#94A3B8'
-  };
-}
-function drawSparkline(canvasId, data, color) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const w = canvas.width, h = canvas.height;
-  ctx.clearRect(0, 0, w, h);
-  const max = Math.max(...data), min = Math.min(...data), range = max - min || 1;
-  ctx.beginPath();
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.lineJoin = 'round';
-  data.forEach((v, i) => {
-    const x = (i / (data.length - 1)) * w;
-    const y = h - ((v - min) / range) * (h - 2) - 1;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-}
-
-/* ── Landing charts ─────────────────────────────────────── */
-function initLandCharts() {
-  setTimeout(() => {
-    const { grid, text } = chartColors();
+/* LAND CHARTS */
+function initLandCharts(){
+  setTimeout(()=>{
+    const {grid,text}=gc();
     ['land-radar','land-rev','land-ch','hero-radar','hero-rev'].forEach(destroyChart);
-
-    // Hero sparklines
-    const sp1 = [40,43,42,47,50,48,54,52,58,61,59,65];
-    const sp2 = [28,32,30,36,34,40,38,43,41,48,46,52];
-    const sp3 = [60,56,58,62,59,65,63,68,66,71,69,74];
-    const sp4 = [20,22,21,25,23,27,26,30,28,33,31,35];
-    const hexGrn = appState.dark ? '#22C55E' : '#16A34A';
-    const hexAmb = appState.dark ? '#F59E0B' : '#D97706';
-    const hexRed = appState.dark ? '#EF4444' : '#DC2626';
-    const hexAcc = appState.dark ? '#3B82F6' : '#2563EB';
-    drawSparkline('sp1', sp1, hexGrn);
-    drawSparkline('sp2', sp2, hexAmb);
-    drawSparkline('sp3', sp3, hexRed);
-    drawSparkline('sp4', sp4, hexAcc);
-
-    // Hero radar
-    const hr = document.getElementById('hero-radar');
-    if (hr) {
-      charts['hero-radar'] = new Chart(hr, {
-        type: 'radar',
-        data: { labels: ['Gr','Ma','Re','Mk','Op'], datasets: [{ data: [72,48,68,58,63], backgroundColor: 'rgba(59,130,246,.1)', borderColor: '#3B82F6', borderWidth: 1.5, pointBackgroundColor: '#3B82F6', pointRadius: 2 }] },
-        options: { responsive: true, maintainAspectRatio: true, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: grid }, pointLabels: { color: text, font: { size: 8, family: 'DM Mono' } }, angleLines: { color: grid } } }, plugins: { legend: { display: false } } }
-      });
-    }
-    // Hero revenue line
-    const hl = document.getElementById('hero-rev');
-    if (hl) {
-      charts['hero-rev'] = new Chart(hl, {
-        type: 'line',
-        data: { labels: Array(12).fill(''), datasets: [{ data: [42,45,48,44,52,58,56,62,60,68,72,74], borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,.07)', borderWidth: 1.5, tension: .4, fill: true, pointRadius: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: false } }, plugins: { legend: { display: false } } }
-      });
-    }
-    // Land radar
-    const lr = document.getElementById('land-radar');
-    if (lr) {
-      charts['land-radar'] = new Chart(lr, {
-        type: 'radar',
-        data: { labels: ['Growth','Margin','Retention','Marketing','Ops'], datasets: [{ data: [72,48,68,58,63], backgroundColor: 'rgba(59,130,246,.12)', borderColor: '#3B82F6', borderWidth: 2, pointBackgroundColor: '#3B82F6', pointRadius: 3 }] },
-        options: { responsive: true, maintainAspectRatio: true, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false, stepSize: 25 }, grid: { color: grid }, pointLabels: { color: text, font: { size: 10, family: 'DM Mono' } }, angleLines: { color: grid } } }, plugins: { legend: { display: false } } }
-      });
-    }
-    // Land revenue
-    const lv = document.getElementById('land-rev');
-    if (lv) {
-      charts['land-rev'] = new Chart(lv, {
-        type: 'line',
-        data: { labels: ['J','F','M','A','M','J','J','A','S','O','N','D'], datasets: [{ data: [42,45,48,44,52,58,56,62,60,68,72,74], borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,.07)', borderWidth: 2, tension: .4, fill: true, pointRadius: 0, pointHoverRadius: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: grid }, ticks: { color: text, font: { size: 9, family: 'DM Mono' } } }, y: { grid: { color: grid }, ticks: { color: text, font: { size: 9, family: 'DM Mono' }, callback: v => '$' + v + 'K' } } }, plugins: { legend: { display: false } } }
-      });
-    }
-    // Land channels
-    const lc = document.getElementById('land-ch');
-    if (lc) {
-      charts['land-ch'] = new Chart(lc, {
-        type: 'bar',
-        data: {
-          labels: ['SEO','Paid','LinkedIn','Social','Email'],
-          datasets: [{ data: [75,60,45,80,55], backgroundColor: ['rgba(59,130,246,.5)','rgba(34,197,94,.5)','rgba(139,92,246,.5)','rgba(245,158,11,.5)','rgba(6,182,212,.5)'], borderColor: ['#3B82F6','#22C55E','#8B5CF6','#F59E0B','#06B6D4'], borderWidth: 1, borderRadius: 4 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { color: text, font: { size: 9, family: 'DM Mono' } } }, y: { grid: { color: grid }, ticks: { color: text, font: { size: 9, family: 'DM Mono' } }, max: 100 } }, plugins: { legend: { display: false } } }
-      });
-    }
-  }, 60);
+    const hr=document.getElementById('hero-radar');
+    if(hr)charts['hero-radar']=new Chart(hr,{type:'radar',data:{labels:['Gr','Ma','Re','Mk','Op'],datasets:[{data:[72,48,68,58,63],backgroundColor:'rgba(79,142,247,.12)',borderColor:'#4F8EF7',borderWidth:1.5,pointBackgroundColor:'#4F8EF7',pointRadius:2}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:8,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
+    const hl=document.getElementById('hero-rev');
+    if(hl)charts['hero-rev']=new Chart(hl,{type:'line',data:{labels:Array(12).fill(''),datasets:[{data:[42,45,48,44,52,58,56,62,60,68,72,74],borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.08)',borderWidth:2,tension:.4,fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{display:false},y:{display:false}},plugins:{legend:{display:false}}}});
+    const lr=document.getElementById('land-radar');
+    if(lr)charts['land-radar']=new Chart(lr,{type:'radar',data:{labels:['Growth','Margin','Retention','Marketing','Ops'],datasets:[{data:[72,48,68,58,63],backgroundColor:'rgba(79,142,247,.12)',borderColor:'#4F8EF7',borderWidth:2,pointBackgroundColor:'#4F8EF7',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:10,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
+    const lv=document.getElementById('land-rev');
+    if(lv)charts['land-rev']=new Chart(lv,{type:'line',data:{labels:['J','F','M','A','M','J','J','A','S','O','N','D'],datasets:[{data:[42,45,48,44,52,58,56,62,60,68,72,74],borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0,pointHoverRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'},callback:v=>'$'+v+'K'}}},plugins:{legend:{display:false}}}});
+    const lc=document.getElementById('land-ch');
+    if(lc)charts['land-ch']=new Chart(lc,{type:'bar',data:{labels:['SEO','Paid','LinkedIn','Social','Email'],datasets:[{data:[75,60,45,80,55],backgroundColor:['rgba(79,142,247,.6)','rgba(34,212,122,.6)','rgba(167,139,250,.6)','rgba(245,166,35,.6)','rgba(34,212,200,.6)'],borderColor:['#4F8EF7','#22D47A','#A78BFA','#F5A623','#22D4C8'],borderWidth:1,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}},max:100}},plugins:{legend:{display:false}}}});
+  },60);
 }
 
-/* ── Report charts ──────────────────────────────────────── */
-function initRepCharts(r) {
-  setTimeout(() => {
-    const { grid, text } = chartColors();
+/* REP CHARTS */
+function initRepCharts(r){
+  setTimeout(()=>{
+    const {grid,text}=gc();
     ['rep-radar','rep-rev','rep-ch'].forEach(destroyChart);
-    const rr = document.getElementById('rep-radar');
-    if (rr && r.radarLabels && r.radarVals) {
-      charts['rep-radar'] = new Chart(rr, {
-        type: 'radar',
-        data: { labels: r.radarLabels, datasets: [{ data: r.radarVals, backgroundColor: 'rgba(59,130,246,.15)', borderColor: '#3B82F6', borderWidth: 2, pointBackgroundColor: '#3B82F6', pointRadius: 3 }] },
-        options: { responsive: true, maintainAspectRatio: true, scales: { r: { beginAtZero: true, max: 100, ticks: { display: false }, grid: { color: grid }, pointLabels: { color: text, font: { size: 10, family: 'DM Mono' } }, angleLines: { color: grid } } }, plugins: { legend: { display: false } } }
-      });
+    const rr=document.getElementById('rep-radar');
+    if(rr&&r.radarLabels&&r.radarVals)charts['rep-radar']=new Chart(rr,{type:'radar',data:{labels:r.radarLabels,datasets:[{data:r.radarVals,backgroundColor:'rgba(79,142,247,.15)',borderColor:'#4F8EF7',borderWidth:2,pointBackgroundColor:'#4F8EF7',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:10,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
+    const rv=document.getElementById('rep-rev');
+    if(rv&&r.revenueHistory){
+      const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].slice(-r.revenueHistory.length);
+      charts['rep-rev']=new Chart(rv,{type:'line',data:{labels:months,datasets:[{data:r.revenueHistory,borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0,pointHoverRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'},callback:v=>'$'+v+'K'}}},plugins:{legend:{display:false}}}});
     }
-    const rv = document.getElementById('rep-rev');
-    if (rv && r.revenueHistory) {
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].slice(-r.revenueHistory.length);
-      charts['rep-rev'] = new Chart(rv, {
-        type: 'line',
-        data: { labels: months, datasets: [{ data: r.revenueHistory, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,.07)', borderWidth: 2, tension: .4, fill: true, pointRadius: 0, pointHoverRadius: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: grid }, ticks: { color: text, font: { size: 9, family: 'DM Mono' } } }, y: { grid: { color: grid }, ticks: { color: text, font: { size: 9, family: 'DM Mono' }, callback: v => '$' + v + 'K' } } }, plugins: { legend: { display: false } } }
-      });
-    }
-    const rc = document.getElementById('rep-ch');
-    if (rc && r.channelLabels && r.channelVals) {
-      charts['rep-ch'] = new Chart(rc, {
-        type: 'bar',
-        data: {
-          labels: r.channelLabels,
-          datasets: [{ data: r.channelVals, backgroundColor: ['rgba(59,130,246,.5)','rgba(34,197,94,.5)','rgba(139,92,246,.5)','rgba(245,158,11,.5)','rgba(6,182,212,.5)'], borderColor: ['#3B82F6','#22C55E','#8B5CF6','#F59E0B','#06B6D4'], borderWidth: 1, borderRadius: 4 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { color: text, font: { size: 9, family: 'DM Mono' } } }, y: { grid: { color: grid }, ticks: { color: text, font: { size: 9, family: 'DM Mono' } }, max: 100 } }, plugins: { legend: { display: false } } }
-      });
-    }
-    // Metric sparklines in report
-    const mColors = ['#22C55E','#F59E0B','#EF4444','#3B82F6'];
-    const sp = [38,42,40,45,43,48,46,50,52,49,54,56];
-    Object.keys(r.metrics || {}).forEach((k, i) => {
-      drawSparkline('rep-sp-' + i, sp.map(x => x + i * 3), appState.dark ? mColors[i % 4] : mColors[i % 4]);
-    });
-  }, 80);
+    const rc=document.getElementById('rep-ch');
+    if(rc&&r.channelLabels&&r.channelVals)charts['rep-ch']=new Chart(rc,{type:'bar',data:{labels:r.channelLabels,datasets:[{data:r.channelVals,backgroundColor:['rgba(79,142,247,.6)','rgba(34,212,122,.6)','rgba(167,139,250,.6)','rgba(245,166,35,.6)','rgba(34,212,200,.6)'],borderColor:['#4F8EF7','#22D47A','#A78BFA','#F5A623','#22D4C8'],borderWidth:1,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}},max:100}},plugins:{legend:{display:false}}}});
+  },80);
 }
 
-/* ── Analysis ───────────────────────────────────────────── */
-function buildPrompt(d) {
-  return `You are a Big 4 strategy partner. Analyze this business. Output ONLY a raw JSON object. Begin your response with { and end with }. No markdown, no code fences, no text outside the JSON.
+/* BUILD PROMPT */
+function buildPrompt(d){
+  return `You are a top-tier Big 4 strategy partner. Analyze this business rigorously. Output ONLY raw JSON starting with { and ending with }. No markdown, no backticks.
 
-DATA: Company=${d.name} Industry=${d.industry} Stage=${d.stage} Revenue=$${d.revenue||'?'}/mo Costs=$${d.costs||'?'}/mo CAC=$${d.cac||'?'} LTV=$${d.ltv||'?'} Conv=${d.conv||'?'}% Team=${d.team||'?'} Channels=${d.channels.join(',')||'none'}
+COMPANY:${d.name||'N/A'} INDUSTRY:${d.industry||'N/A'} STAGE:${d.stage||'N/A'}
+REVENUE/mo:$${d.revenue||'?'} COSTS/mo:$${d.costs||'?'} CAC:$${d.cac||'?'} LTV:$${d.ltv||'?'}
+CONVERSION:${d.conv||'?'}% TEAM:${d.team||'?'} CHANNELS:${(d.channels||[]).join(',')||'none'} WEB:${d.website||'N/A'}
 
-Respond with exactly this JSON (replace placeholder values with real analysis):
-{"score":75,"summary":"Single sentence with actual numbers","metrics":{"Margin":"28%","LTV:CAC":"3.2x","Runway":"6 mo","Unit Econ":"Marginal"},"radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LI","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Problem 1","Problem 2","Problem 3","Problem 4"],"rootCauses":["Cause 1","Cause 2","Cause 3"],"pillars":[{"title":"Title 1","desc":"Two sentences."},{"title":"Title 2","desc":"Two sentences."},{"title":"Title 3","desc":"Two sentences."}],"plan":{"d30":["Action 1","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"One bold sentence."}`;
+Return exactly this JSON with real data-driven analysis:
+{"score":75,"summary":"One incisive sentence with actual numbers","metrics":{"Margin":"28%","LTV:CAC":"3.2x","Runway":"6 mo","Unit Econ":"Marginal"},"radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LinkedIn","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Problem 1 with specific data","Problem 2","Problem 3","Problem 4"],"rootCauses":["Root cause 1","Root cause 2","Root cause 3"],"pillars":[{"title":"Pillar 1","desc":"Two specific actionable sentences."},{"title":"Pillar 2","desc":"Two sentences."},{"title":"Pillar 3","desc":"Two sentences."}],"plan":{"d30":["Action 1","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"One bold concluding sentence."}`;
 }
 
-async function runAnalysis(retryMode) {
-  if (!retryMode) {
-    const name = document.getElementById('f-name').value.trim();
-    const industry = document.getElementById('f-industry').value;
-    const stage = document.getElementById('f-stage').value;
-
-    if (!name || !industry || !stage) {
-      const err = document.getElementById('form-error');
-      err.textContent = '⚠ Required: Business name, Industry, and Stage.';
-      err.style.display = 'block';
+/* RUN ANALYSIS */
+async function runAnalysis(retryMode){
+  if(!retryMode){
+    const name=document.getElementById('f-name').value.trim();
+    const industry=document.getElementById('f-industry').value;
+    const stage=document.getElementById('f-stage').value;
+    if(!name||!industry||!stage){
+      const err=document.getElementById('form-error');
+      err.textContent='⚠ Required: Business name, Industry, and Stage.';
+      err.style.display='block';
       return;
     }
-    document.getElementById('form-error').style.display = 'none';
-
-    appState.formData = {
-      name, industry, stage,
-      revenue: document.getElementById('f-rev').value,
-      costs: document.getElementById('f-costs').value,
-      cac: document.getElementById('f-cac').value,
-      ltv: document.getElementById('f-ltv').value,
-      conv: document.getElementById('f-conv').value,
-      team: document.getElementById('f-team').value,
-      channels: [...selectedChannels],
-      website: document.getElementById('f-web').value
-    };
+    document.getElementById('form-error').style.display='none';
+    appState.fdata={name,industry,stage,
+      revenue:document.getElementById('f-rev').value,
+      costs:document.getElementById('f-costs').value,
+      cac:document.getElementById('f-cac').value,
+      ltv:document.getElementById('f-ltv').value,
+      conv:document.getElementById('f-conv').value,
+      team:document.getElementById('f-team').value,
+      channels:[...selectedChannels],
+      website:document.getElementById('f-web').value};
   }
-
-  // ── Navigate to loading screen
   goTo('load');
-  appState.pct = 0;
-  clearInterval(appState.loadInterval);
-  clearInterval(appState.pctInterval);
-  appState.loadInterval = null;
-  appState.pctInterval = null;
+  appState.pct=0;
+  clearInterval(appState.loadInt);
+  clearInterval(appState.pctInt);
 
-  // Safe UI updater (elements may not exist if page changes)
-  function upd(pct, msg) {
-    const f = document.getElementById('prog-fill');
-    const p = document.getElementById('load-pct');
-    const m = document.getElementById('load-msg');
-    if (f) f.style.width = Math.min(100, Math.round(pct)) + '%';
-    if (p) p.textContent = Math.min(100, Math.round(pct)) + '%';
-    if (msg && m) m.textContent = msg;
+  function upd(pct,msg){
+    const f=document.getElementById('prog-fill');
+    const p=document.getElementById('load-pct');
+    const m=document.getElementById('load-msg');
+    if(f)f.style.width=Math.min(100,Math.round(pct))+'%';
+    if(p)p.textContent=Math.min(100,Math.round(pct))+'%';
+    if(msg&&m)m.textContent=msg;
   }
+  upd(0,'Parsing business profile…');
+  const msgs=['Running financial model…','Benchmarking vs sector…','Mapping root causes…','Building strategic options…','Compiling report…'];
+  let mi=0;
+  appState.loadInt=setInterval(()=>{
+    appState.pct=Math.min(appState.pct+(appState.pct<88?10+Math.random()*8:0.4+Math.random()*0.3),97);
+    const msg=appState.pct<88?msgs[Math.min(mi,msgs.length-1)]:'Waiting for AI response…';
+    upd(appState.pct,msg);mi++;
+  },900);
 
-  upd(0, 'Parsing business profile…');
+  let apiData=null,fetchError=null;
+  try{
+    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(appState.fdata)});
+    if(!res.ok){const t=await res.json().catch(()=>({}));fetchError=t.error||'API error '+res.status;}
+    else{const json=await res.json();apiData={content:[{type:'text',text:JSON.stringify(json.report)}]};}
+  }catch(e){fetchError='Network error: '+e.message}
 
-  const msgs = ['Running financial model…','Benchmarking vs sector…','Mapping root causes…','Building strategic options…','Compiling report…'];
-  let mi = 0;
-  // Progress never stops — slow crawl after 88% so user knows it's working
-  appState.loadInterval = setInterval(() => {
-    if (appState.pct < 88) {
-      appState.pct += 10 + Math.random() * 8;
-    } else if (appState.pct < 97) {
-      appState.pct += 0.4 + Math.random() * 0.3; // slow crawl — AI still thinking
-    }
-    const msg = appState.pct < 88
-      ? msgs[Math.min(mi, msgs.length - 1)]
-      : 'Waiting for AI response…';
-    upd(appState.pct, msg);
-    mi++;
-  }, 900);
-
-  // ── Fetch from API
-  let apiData = null;
-  let fetchError = null;
-
-  try {
-    // Call our secure backend API route
-    const res = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(appState.formData)
-    });
-    if (!res.ok) {
-      const t = await res.json().catch(() => ({}));
-      fetchError = t.error || 'API error ' + res.status;
-    } else {
-      const json = await res.json();
-      apiData = { content: [{ type: 'text', text: JSON.stringify(json.report) }] };
-    }
-  } catch (e) {
-    fetchError = 'Network error: ' + e.message;
-  }
-
-  // Always stop intervals after fetch
-  clearInterval(appState.loadInterval);
-  clearInterval(appState.pctInterval);
-  appState.loadInterval = null;
-  appState.pctInterval = null;
-
-  if (fetchError) {
-    if (fetchError.includes('No API key')) {
-      // Show API key input in loading page instead of going back to form
-      const keySetup = document.getElementById('api-key-setup');
-      const msgEl = document.getElementById('load-msg');
-      if (keySetup) keySetup.style.display = 'block';
-      if (msgEl) msgEl.textContent = 'API key required';
-      // Stop progress at current position
-      upd(appState.pct, 'API key required');
-    } else {
-      goTo('form');
-      const el = document.getElementById('form-error');
-      if (el) { el.textContent = '⚠ ' + fetchError; el.style.display = 'block'; }
-    }
-    return;
-  }
-
-  // ── Parse JSON
-  let report = null;
-  try {
-    const blocks = (apiData.content || []).filter(b => b.type === 'text').map(b => b.text);
-    const raw = blocks.join('').trim();
-    if (!raw) throw new Error('Empty AI response');
-    const s = raw.indexOf('{');
-    const e2 = raw.lastIndexOf('}');
-    if (s === -1 || e2 === -1) throw new Error('No JSON found in response');
-    report = JSON.parse(raw.slice(s, e2 + 1));
-    if (typeof report.score !== 'number') report.score = parseInt(report.score) || 50;
-  } catch (e) {
+  clearInterval(appState.loadInt);clearInterval(appState.pctInt);
+  if(fetchError){
     goTo('form');
-    const el = document.getElementById('form-error');
-    if (el) { el.textContent = '⚠ Parse error: ' + e.message; el.style.display = 'block'; }
+    const el=document.getElementById('form-error');
+    if(el){el.textContent='⚠ '+fetchError;el.style.display='block';}
     return;
   }
 
-  // ── Success: store report, switch page, then build HTML
-  appState.report = report;
-  upd(100, 'Report ready!');
-
-  setTimeout(() => {
-    // Switch page first so report-body element exists in DOM
-    goTo('rep');
-    // Then inject HTML after a tick
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        try { buildReportHTML(); } catch(e) { console.error('Report build error:', e); }
-      });
-    });
-  }, 300);
+  let report=null;
+  try{
+    const raw=(apiData.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
+    const s=raw.indexOf('{'),e2=raw.lastIndexOf('}');
+    if(s===-1||e2===-1)throw new Error('No JSON found');
+    report=JSON.parse(raw.slice(s,e2+1));
+    if(typeof report.score!=='number')report.score=parseInt(String(report.score))||50;
+  }catch(e){
+    goTo('form');
+    const el=document.getElementById('form-error');
+    if(el){el.textContent='⚠ Parse error: '+e.message;el.style.display='block';}
+    return;
+  }
+  appState.report=report;
+  upd(100,'Report ready!');
+  setTimeout(()=>{goTo('rep');requestAnimationFrame(()=>requestAnimationFrame(()=>{try{buildReportHTML()}catch(e){console.error(e)}}))},350);
 }
 
-/* ── Build report HTML ──────────────────────────────────── */
-function scCol(s) { return s >= 70 ? 'var(--grn)' : s >= 45 ? 'var(--amb)' : 'var(--red)'; }
-function scHex(s) { return s >= 70 ? '#22C55E' : s >= 45 ? '#F59E0B' : '#EF4444'; }
-function scLbl(s) { return s >= 70 ? 'STRONG' : s >= 45 ? 'AT RISK' : 'CRITICAL'; }
+/* BUILD REPORT HTML */
+function buildReportHTML(){
+  const r=appState.report,f=appState.fdata;
+  if(!r)return;
+  const sc=r.score,col=scHex(sc),lbl=scLbl(sc);
+  const ringC=2*Math.PI*48,ringF=(sc/100)*ringC;
+  const pillarCols=['#4F8EF7','#A78BFA','#22D47A'];
+  const phaseCols=[{l:'0–30 DAYS',items:r.plan?.d30,c:'#FF5B5B'},{l:'30–60 DAYS',items:r.plan?.d60,c:'#F5A623'},{l:'60–90 DAYS',items:r.plan?.d90,c:'#22D47A'}];
+  const ments=Object.entries(r.metrics||{});
+  const mCols=['#22D47A','#F5A623','#FF5B5B','#4F8EF7'];
+  const tags=[f.industry,f.stage,...(f.channels||[]).slice(0,2)].filter(Boolean);
 
-function buildReportHTML() {
-  const r = appState.report;
-  const f = appState.formData;
-  if (!r) return;
-
-  const sc = r.score;
-  const ringC = 2 * Math.PI * 54;
-  const ringF = (sc / 100) * ringC;
-
-  const metricsHTML = Object.entries(r.metrics || {}).map(([k, v], i) => `
-    <div class="card" style="padding:14px 15px">
-      <div class="lbl" style="margin-bottom:4px">${k}</div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-end">
-        <span class="mono" style="font-size:20px;font-weight:600;color:${['var(--grn)','var(--amb)','var(--red)','var(--acc)'][i%4]}">${v}</span>
-        <canvas id="rep-sp-${i}" width="48" height="18"></canvas>
+  document.getElementById('report-body').innerHTML=`
+  <div class="rep-cover" style="animation:fadeUp .6s ease both">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="rep-co">${f.name}</div>
+        <div class="rep-meta">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})} · DIAGNOSIS REPORT</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          ${tags.map(t=>`<span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);background:rgba(255,255,255,.05);border:1px solid var(--bdr);padding:2px 9px;border-radius:3px">${t}</span>`).join('')}
+        </div>
       </div>
-    </div>`).join('');
-
-  const problemsHTML = (r.problems || []).map((p, i) => `
-    <div style="display:flex;gap:9px;padding:9px 0;border-bottom:${i < r.problems.length - 1 ? '1px solid var(--bdr)' : 'none'};align-items:flex-start">
-      <span class="mono" style="font-size:9px;color:var(--red);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);padding:1px 6px;border-radius:3px;flex-shrink:0;margin-top:2px">${String(i+1).padStart(2,'0')}</span>
-      <span style="font-size:13px;color:var(--txt2);line-height:1.55">${p}</span>
-    </div>`).join('');
-
-  const rootsHTML = (r.rootCauses || []).map((rc, i) => `
-    <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:12px;margin-bottom:${i < r.rootCauses.length - 1 ? '8px' : '0'}">
-      <div class="lbl" style="color:var(--amb);margin-bottom:4px">CAUSE ${String(i+1).padStart(2,'0')}</div>
-      <div style="font-size:12px;color:var(--txt2);line-height:1.6">${rc}</div>
-    </div>`).join('');
-
-  const pillColors = ['var(--acc)', 'var(--pur)', 'var(--grn)'];
-  const pillarsHTML = (r.pillars || []).map((p, i) => `
-    <div class="pillar-card" style="border-top-color:${pillColors[i%3]}">
-      <div class="lbl" style="color:${pillColors[i%3]};margin-bottom:7px">PILLAR 0${i+1}</div>
-      <div style="font-weight:600;font-size:14px;color:var(--txt);margin-bottom:5px;letter-spacing:-0.2px">${p.title}</div>
-      <div style="font-size:12px;color:var(--txt3);line-height:1.6">${p.desc}</div>
-    </div>`).join('');
-
-  const phases = [
-    { l: '0–30 DAYS', items: r.plan?.d30, c: 'var(--red)' },
-    { l: '30–60 DAYS', items: r.plan?.d60, c: 'var(--amb)' },
-    { l: '60–90 DAYS', items: r.plan?.d90, c: 'var(--grn)' }
-  ];
-  const planHTML = phases.map(ph => `
-    <div class="phase-col">
-      <div class="phase-title" style="color:${ph.c};border-bottom:1px solid ${ph.c}30">${ph.l}</div>
-      ${(ph.items || []).map(a => `<div class="phase-item"><span style="color:${ph.c};font-size:11px;flex-shrink:0;margin-top:1px;font-weight:700">→</span>${a}</div>`).join('')}
-    </div>`).join('');
-
-  const tags = [f.industry, f.stage, ...(f.channels || []).slice(0, 3)].filter(Boolean);
-
-  document.getElementById('report-body').innerHTML = `
-    <!-- Header info -->
-    <div style="margin-bottom:20px">
-      <div style="font-weight:700;font-size:17px;color:var(--txt);margin-bottom:4px">${f.name}</div>
-      <div class="lbl" style="margin-bottom:8px">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})} · DIAGNOSIS REPORT</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">${tags.map(t=>`<span class="rep-tag">${t}</span>`).join('')}</div>
-    </div>
-
-    <!-- Score + Summary -->
-    <div style="display:grid;grid-template-columns:auto 1fr;gap:12px;margin-bottom:12px;align-items:stretch" class="score-row">
-      <div class="card" style="padding:22px;min-width:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
-        <svg width="140" height="140" viewBox="0 0 140 140">
-          <circle cx="70" cy="70" r="54" fill="none" stroke="var(--bdr)" stroke-width="9"/>
-          <circle cx="70" cy="70" r="54" fill="none" stroke="${scHex(sc)}" stroke-width="9" stroke-dasharray="${ringF.toFixed(1)} ${ringC.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 70 70)" style="transition:stroke-dasharray 1.8s cubic-bezier(.4,0,.2,1)"/>
-          <text x="70" y="64" text-anchor="middle" fill="${scHex(sc)}" font-size="28" font-weight="700" font-family="DM Mono,monospace">${sc}</text>
-          <text x="70" y="80" text-anchor="middle" fill="var(--txt3)" font-size="9" font-family="DM Mono,monospace" letter-spacing="1">/ 100</text>
-          <text x="70" y="96" text-anchor="middle" fill="${scHex(sc)}" font-size="11" font-weight="600" font-family="DM Mono,monospace">${scLbl(sc)}</text>
+      <div style="display:flex;align-items:center;gap:16px">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
+          <circle cx="55" cy="55" r="48" fill="none" stroke="${col}" stroke-width="8" stroke-dasharray="${ringF.toFixed(1)} ${ringC.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 55 55)"/>
+          <text x="55" y="51" text-anchor="middle" fill="${col}" font-size="24" font-weight="800" font-family="Inter,sans-serif">${sc}</text>
+          <text x="55" y="65" text-anchor="middle" fill="#4A5568" font-size="9" font-family="JetBrains Mono,monospace" letter-spacing="1">/100</text>
+          <text x="55" y="79" text-anchor="middle" fill="${col}" font-size="10" font-weight="700" font-family="Inter,sans-serif">${lbl}</text>
         </svg>
-      </div>
-      <div class="card" style="padding:22px">
-        <div class="lbl" style="margin-bottom:10px">Executive Summary</div>
-        <blockquote style="font-size:15px;font-weight:500;color:var(--txt);border-left:3px solid var(--acc);padding-left:14px;line-height:1.55;margin-bottom:12px">"${r.summary}"</blockquote>
-        <p style="font-size:13px;color:var(--txt3);font-style:italic;line-height:1.6;margin-bottom:16px">${r.verdict || ''}</p>
-        <div class="lbl" style="margin-bottom:8px">5-DIMENSION ASSESSMENT</div>
-        <canvas id="rep-radar" height="110"></canvas>
+        <div style="max-width:320px">
+          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">Executive Summary</div>
+          <blockquote style="font-size:15px;font-weight:600;color:#fff;border-left:3px solid var(--blue);padding-left:14px;line-height:1.55;margin-bottom:8px">"${r.summary}"</blockquote>
+          <p style="font-size:12px;color:var(--txt2);font-style:italic;line-height:1.6">${r.verdict||''}</p>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- Metrics -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:12px" class="metrics-grid">
-      ${metricsHTML}
+  <div class="kpi-grid">
+    ${ments.map(([k,v],i)=>`
+    <div class="kpi" style="animation:fadeUp .5s ${.05+i*.07}s ease both">
+      <div class="kpi-lbl">${k}</div>
+      <div class="kpi-val" style="color:${mCols[i%4]}">${v}</div>
+    </div>`).join('')}
+  </div>
+
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="rep-card">
+      <div class="rep-card-title">Revenue Trajectory</div>
+      <div style="height:140px"><canvas id="rep-rev"></canvas></div>
     </div>
-
-    <!-- Revenue + Channels charts -->
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px" class="charts-row">
-      <div class="card card-pad">
-        <div class="lbl" style="margin-bottom:10px">REVENUE TRAJECTORY</div>
-        <div style="height:140px"><canvas id="rep-rev"></canvas></div>
-      </div>
-      <div class="card card-pad">
-        <div class="lbl" style="margin-bottom:10px">CHANNEL PERFORMANCE</div>
-        <div style="height:140px"><canvas id="rep-ch"></canvas></div>
-      </div>
+    <div class="rep-card">
+      <div class="rep-card-title">5-Dimension Assessment</div>
+      <canvas id="rep-radar" height="140"></canvas>
     </div>
+  </div>
 
-    <!-- Problems + Root Causes -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div class="card card-pad">
-        <div class="lbl" style="color:var(--red);margin-bottom:12px">▸ KEY PROBLEMS</div>
-        ${problemsHTML}
-      </div>
-      <div class="card card-pad">
-        <div class="lbl" style="color:var(--amb);margin-bottom:12px">◎ ROOT CAUSES</div>
-        ${rootsHTML}
-      </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div class="rep-card">
+      <div class="rep-card-title" style="--c:var(--red)">Key Problems</div>
+      ${r.problems?.map((p,i)=>`
+      <div class="finding">
+        <span class="badge badge-crit">${String(i+1).padStart(2,'0')}</span>
+        <span class="finding-txt">${p}</span>
+      </div>`).join('')||''}
     </div>
-
-    <!-- Strategic Pillars -->
-    <div class="card card-pad" style="margin-bottom:12px">
-      <div class="lbl" style="color:var(--acc);margin-bottom:14px">◈ STRATEGIC PILLARS</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px" class="pillars-grid">
-        ${pillarsHTML}
-      </div>
+    <div class="rep-card">
+      <div class="rep-card-title">Channel Performance</div>
+      <div style="height:160px"><canvas id="rep-ch"></canvas></div>
     </div>
+  </div>
 
-    <!-- Action Plan -->
-    <div class="card card-pad" style="margin-bottom:12px">
-      <div class="lbl" style="color:var(--grn);margin-bottom:16px">▶ 90-DAY EXECUTION PLAN</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px" class="plan-grid">
-        ${planHTML}
-      </div>
+  <div class="rep-card" style="margin-bottom:14px">
+    <div class="rep-card-title">Root Causes</div>
+    ${r.rootCauses?.map((rc,i)=>`
+    <div class="root-box">
+      <div class="root-lbl">CAUSE ${String(i+1).padStart(2,'0')}</div>
+      <div class="root-txt">${rc}</div>
+    </div>`).join('')||''}
+  </div>
+
+  <div class="rep-card" style="margin-bottom:14px">
+    <div class="rep-card-title">Strategic Pillars</div>
+    ${r.pillars?.map((p,i)=>`
+    <div class="pillar" style="border-left-color:${pillarCols[i%3]}">
+      <div class="pillar-num" style="color:${pillarCols[i%3]}">PILLAR 0${i+1}</div>
+      <div class="pillar-title">${p.title}</div>
+      <div class="pillar-desc">${p.desc}</div>
+    </div>`).join('')||''}
+  </div>
+
+  <div class="rep-card" style="margin-bottom:14px">
+    <div class="rep-card-title">90-Day Execution Plan</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+      ${phaseCols.map(ph=>`
+      <div>
+        <div class="phase-hdr" style="color:${ph.c};border-bottom-color:${ph.c}30">${ph.l}</div>
+        ${ph.items?.map(a=>`<div class="phase-item"><span class="phase-arrow" style="color:${ph.c}">→</span>${a}</div>`).join('')||''}
+      </div>`).join('')}
     </div>
+  </div>
 
-    <!-- Export CTA -->
-    <div class="card card-pad" style="text-align:center">
-      <div style="font-size:18px;font-weight:700;color:var(--txt);margin-bottom:7px;letter-spacing:-0.5px">Ready to present?</div>
-      <p style="font-size:13px;color:var(--txt3);margin-bottom:18px">Export a board-ready PDF with full analysis and charts.</p>
-      <button class="btn-prim btn-prim-lg" onclick="exportPDF()">↓ Export PDF Report</button>
-    </div>`;
-
+  <div style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(123,92,246,.06));border:1px solid rgba(79,142,247,.2);border-radius:16px;padding:32px;text-align:center">
+    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px">Ready to present?</div>
+    <p style="font-size:14px;color:var(--txt2);margin-bottom:22px">Export a board-ready PDF with full analysis, charts, and recommendations.</p>
+    <button class="btn-glow" style="font-size:14px;padding:14px 32px" onclick="exportPDF()">↓ Export PDF Report</button>
+  </div>`;
   initRepCharts(r);
 }
 
-/* ── PDF Export ─────────────────────────────────────────── */
-function exportPDF() {
-  const r = appState.report, f = appState.formData;
-  if (!r) return;
-  const col = scHex(r.score);
-  const phs = [
-    { l: '0–30 Days', items: r.plan?.d30, c: '#DC2626' },
-    { l: '30–60 Days', items: r.plan?.d60, c: '#D97706' },
-    { l: '60–90 Days', items: r.plan?.d90, c: '#16A34A' }
-  ];
-  const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<title>Orxion — ${f.name}</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#fff;color:#0f172a;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.65;padding:48px 60px;max-width:780px;margin:0 auto}
-.mn{font-family:'DM Mono';font-size:9px;letter-spacing:1.5px;color:#64748b;text-transform:uppercase}
-h1{font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:3px}
-h2{font-family:'DM Mono';font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#64748b;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid #e2e8f0}
-h3{font-size:13px;font-weight:600;margin-bottom:3px}
-.sn{font-family:'DM Mono';font-size:64px;font-weight:700;color:${col};line-height:1}
-.vd{font-size:14px;font-style:italic;border-left:3px solid #2563eb;padding-left:12px;margin:12px 0;line-height:1.5;color:#1e293b}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.mc{border:1px solid #e2e8f0;border-radius:6px;padding:12px}
-.mv{font-family:'DM Mono';font-size:20px;font-weight:600;margin-top:2px}
-ul{list-style:none}
-li{padding:5px 0;border-bottom:1px solid #f8fafc;display:flex;gap:7px;font-size:12px;color:#475569}
-li:last-child{border-bottom:none}
-.rc{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:11px;font-size:12px;color:#78350f;line-height:1.55}
-.pb{padding:9px 0;border-bottom:1px solid #f8fafc;display:flex;gap:9px}
-.pb:last-child{border-bottom:none}
-.pbg{font-family:'DM Mono';font-size:8px;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px}
-.ph{margin-bottom:16px}
-.phl{font-family:'DM Mono';font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;display:inline-block;padding:3px 9px;border-radius:4px;margin-bottom:7px}
-.ft{margin-top:36px;padding-top:12px;border-top:1px solid #e2e8f0;font-family:'DM Mono';font-size:9px;color:#cbd5e1;display:flex;justify-content:space-between}
-@page{margin:.5in}
-</style></head><body>
-<div style="display:flex;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #e2e8f0">
-  <div><div class="mn" style="margin-bottom:6px">Orxion AI · Business Diagnosis</div><h1>${f.name}</h1><div class="mn" style="margin-top:3px">${f.industry} · ${f.stage}</div></div>
-  <div style="text-align:right"><div class="mn">Orxion AI</div><div style="font-weight:600;margin-top:2px">Confidential Report</div><div class="mn" style="margin-top:2px">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div></div>
-</div>
-<div style="display:flex;gap:22px;margin-bottom:20px">
-  <div><div class="sn">${r.score}</div><div class="mn" style="margin-top:3px">Health Score</div></div>
-  <div style="flex:1"><div class="vd">"${r.summary}"</div><p style="font-size:13px;color:#475569;font-style:italic">${r.verdict||''}</p></div>
-</div>
-${r.metrics ? `<h2>Key Metrics</h2><div class="g3">${Object.entries(r.metrics).map(([k,v])=>`<div class="mc"><div class="mn" style="font-size:8px;margin-bottom:3px">${k}</div><div class="mv">${v}</div></div>`).join('')}</div>` : ''}
-<h2>Key Problems</h2><ul>${(r.problems||[]).map(p=>`<li><span style="color:#ef4444;font-weight:700;flex-shrink:0">▸</span>${p}</li>`).join('')}</ul>
+/* PDF EXPORT */
+function exportPDF(){
+  const r=appState.report,f=appState.fdata;if(!r)return;
+  const col=scHex(r.score);
+  const phs=[{l:'0–30 Days',items:r.plan?.d30,c:'#DC2626'},{l:'30–60 Days',items:r.plan?.d60,c:'#D97706'},{l:'60–90 Days',items:r.plan?.d90,c:'#16A34A'}];
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><title>Orxion — ${f.name}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;color:#0f172a;font-family:'Inter',sans-serif;font-size:13px;line-height:1.65;padding:48px 60px;max-width:780px;margin:0 auto}.mn{font-family:'JetBrains Mono';font-size:9px;letter-spacing:1.5px;color:#64748b;text-transform:uppercase}h1{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}h2{font-family:'JetBrains Mono';font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#64748b;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid #e2e8f0}h3{font-size:13px;font-weight:700;margin-bottom:3px}.sn{font-family:'JetBrains Mono';font-size:64px;font-weight:700;color:${col};line-height:1}.vd{font-size:14px;font-style:italic;border-left:3px solid #4F8EF7;padding-left:12px;margin:12px 0;line-height:1.5;color:#1e293b}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.mc{border:1px solid #e2e8f0;border-radius:6px;padding:12px}.mv{font-family:'JetBrains Mono';font-size:20px;font-weight:600;margin-top:2px}ul{list-style:none}li{padding:5px 0;border-bottom:1px solid #f8fafc;display:flex;gap:7px;font-size:12px;color:#475569}li:last-child{border-bottom:none}.rc{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:11px;font-size:12px;color:#78350f;line-height:1.55}.pb{padding:9px 0;border-bottom:1px solid #f8fafc;display:flex;gap:9px}.pb:last-child{border-bottom:none}.pbg{font-family:'JetBrains Mono';font-size:8px;color:#4F8EF7;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px}.ph{margin-bottom:16px}.phl{font-family:'JetBrains Mono';font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;display:inline-block;padding:3px 9px;border-radius:4px;margin-bottom:7px}.ft{margin-top:36px;padding-top:12px;border-top:1px solid #e2e8f0;font-family:'JetBrains Mono';font-size:9px;color:#cbd5e1;display:flex;justify-content:space-between}@page{margin:.5in}</style></head><body>
+<div style="display:flex;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #e2e8f0"><div><div class="mn" style="margin-bottom:6px">Orxion AI · Business Diagnosis</div><h1>${f.name}</h1><div class="mn" style="margin-top:3px">${f.industry} · ${f.stage}</div></div><div style="text-align:right"><div class="mn">Orxion AI</div><div style="font-weight:700;margin-top:2px">Confidential Report</div><div class="mn" style="margin-top:2px">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div></div></div>
+<div style="display:flex;gap:22px;margin-bottom:20px"><div><div class="sn">${r.score}</div><div class="mn" style="margin-top:3px">Health Score</div></div><div style="flex:1"><div class="vd">"${r.summary}"</div><p style="font-size:13px;color:#475569;font-style:italic">${r.verdict||''}</p></div></div>
+${r.metrics?`<h2>Key Metrics</h2><div class="g3">${Object.entries(r.metrics).map(([k,v])=>`<div class="mc"><div class="mn" style="font-size:8px;margin-bottom:3px">${k}</div><div class="mv">${v}</div></div>`).join('')}</div>`:''}
+<h2>Key Problems</h2><ul>${(r.problems||[]).map(p=>`<li><span style="color:#FF5B5B;font-weight:700;flex-shrink:0">▸</span>${p}</li>`).join('')}</ul>
 <h2>Root Causes</h2><div class="g3">${(r.rootCauses||[]).map((c,i)=>`<div class="rc"><div class="mn" style="font-size:8px;color:#92400e;margin-bottom:4px">Cause ${String(i+1).padStart(2,'0')}</div>${c}</div>`).join('')}</div>
 <h2>Strategic Pillars</h2><div>${(r.pillars||[]).map((p,i)=>`<div class="pb"><span class="pbg">P${i+1}</span><div><h3>${p.title}</h3><div style="font-size:12px;color:#475569;line-height:1.55;margin-top:3px">${p.desc}</div></div></div>`).join('')}</div>
-<h2>90-Day Execution Plan</h2>
-${phs.map(p=>`<div class="ph"><span class="phl" style="color:${p.c};background:${p.c}15;border:1px solid ${p.c}30">${p.l}</span><ul>${(p.items||[]).map(a=>`<li><span style="color:${p.c};font-weight:700;flex-shrink:0">→</span>${a}</li>`).join('')}</ul></div>`).join('')}
-<div class="ft"><span>ORXION AI · CONFIDENTIAL · FOR INTERNAL USE ONLY</span><span>${new Date().toISOString().split('T')[0]}</span></div>
-</body></html>`);
-  w.document.close();
-  setTimeout(() => w.print(), 900);
+<h2>90-Day Execution Plan</h2>${phs.map(p=>`<div class="ph"><span class="phl" style="color:${p.c};background:${p.c}15;border:1px solid ${p.c}30">${p.l}</span><ul>${(p.items||[]).map(a=>`<li><span style="color:${p.c};font-weight:700;flex-shrink:0">→</span>${a}</li>`).join('')}</ul></div>`).join('')}
+<div class="ft"><span>ORXION AI · CONFIDENTIAL · FOR INTERNAL USE ONLY</span><span>${new Date().toISOString().split('T')[0]}</span></div></body></html>`);
+  w.document.close();setTimeout(()=>w.print(),900);
 }
 
-/* ── Reset ──────────────────────────────────────────────── */
-function setApiKeyAndRetry() {
-  const input = document.getElementById('api-key-input');
-  if (!input || !input.value.trim()) return;
-  window.ORXION_API_KEY = input.value.trim();
-  const keySetup = document.getElementById('api-key-setup');
-  if (keySetup) keySetup.style.display = 'none';
-  if (appState.formData) runAnalysis(true);
+/* RESET */
+function resetApp(){
+  appState.report=null;appState.fdata=null;selectedChannels=[];
+  ['f-name','f-industry','f-stage','f-rev','f-costs','f-cac','f-ltv','f-conv','f-team','f-web'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const err=document.getElementById('form-error');if(err)err.style.display='none';
+  initChannels();goTo('land');
 }
 
-function resetApp() {
-  appState.report = null;
-  appState.formData = null;
-  appState.pdfName = '';
-  selectedChannels = [];
-  // Reset form fields
-  ['f-name','f-industry','f-stage','f-rev','f-costs','f-cac','f-ltv','f-conv','f-team','f-web'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.getElementById('upload-icon').textContent = '📄';
-  document.getElementById('upload-label').textContent = 'Upload PDF · Financial statements, P&L, reports';
-  document.getElementById('upload-label').style.color = '';
-  document.getElementById('form-error').style.display = 'none';
-  initChannels();
-  goTo('land');
-}
-
-/* ── Feature card hover ─────────────────────────────────── */
-document.querySelectorAll('.feat-item').forEach(el => {
-  el.addEventListener('mouseenter', () => el.style.background = 'var(--bg2)');
-  el.addEventListener('mouseleave', () => el.style.background = 'var(--surf)');
-});
-
-/* ── Init ───────────────────────────────────────────────── */
+/* INIT */
 initTicker();
 initChannels();
 initLandCharts();
+animateHero();
 </script>
 </body>
 </html>
