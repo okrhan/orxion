@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: '4mb',
     },
   },
 };
@@ -15,7 +15,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const body = req.body;
-
     if (!body.name) {
       return res.status(400).json({ error: "Business name is required" });
     }
@@ -26,15 +25,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const mod = body.module || "strategy";
-    const pdfBase64 = body.pdfBase64 || null;
+    const stmtNote = body.stmtNote || "";
 
     const prompts: Record<string, string> = {
       strategy: `You are a Big 4 strategy partner. Analyze this business rigorously. Return ONLY raw JSON starting with { and ending with }. No markdown, no backticks.
 COMPANY:${body.name} INDUSTRY:${body.industry} STAGE:${body.stage}
 REVENUE:$${body.revenue||"?"}/mo COSTS:$${body.costs||"?"}/mo CAC:$${body.cac||"?"} LTV:$${body.ltv||"?"}
 TEAM:${body.team||"?"} CHANNELS:${(body.channels||[]).join(",")||"none"} WEB:${body.website||"N/A"}
-${pdfBase64 ? "IMPORTANT: Financial statements have been uploaded. Extract and use ALL financial data (revenue, costs, margins, growth rates, etc.) from the statements to populate your analysis. The statements are attached." : ""}
-Return: {"score":75,"summary":"One incisive sentence referencing specific numbers","metrics":{"Margin":"28%","LTV:CAC":"3.2x","Runway":"6 mo","Unit Econ":"Marginal"},"radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LinkedIn","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Specific problem with data","Problem 2","Problem 3","Problem 4"],"rootCauses":["Root cause 1","Root cause 2","Root cause 3"],"pillars":[{"title":"Pillar 1","desc":"Two actionable sentences."},{"title":"Pillar 2","desc":"Two sentences."},{"title":"Pillar 3","desc":"Two sentences."}],"plan":{"d30":["Action 1","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"Bold conclusion with specific numbers."}`,
+${stmtNote ? `NOTE: ${stmtNote} — use ALL provided financial figures in your analysis.` : ""}
+Return: {"score":75,"summary":"One incisive sentence referencing specific numbers from the data","metrics":{"Margin":"28%","LTV:CAC":"3.2x","Runway":"6 mo","Unit Econ":"Marginal"},"radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LinkedIn","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Specific problem with data","Problem 2","Problem 3","Problem 4"],"rootCauses":["Root cause 1","Root cause 2","Root cause 3"],"pillars":[{"title":"Pillar 1","desc":"Two actionable sentences."},{"title":"Pillar 2","desc":"Two sentences."},{"title":"Pillar 3","desc":"Two sentences."}],"plan":{"d30":["Action 1","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"Bold conclusion with numbers."}`,
 
       valuation: `You are an investment banker. Provide investor-grade valuation. Return ONLY raw JSON starting with { and ending with }. No markdown.
 COMPANY:${body.name} INDUSTRY:${body.industry} STAGE:${body.stage}
@@ -57,26 +56,6 @@ Return: {"score":68,"summary":"Comprehensive summary","metrics":{"Revenue":"$XM"
 
     const prompt = prompts[mod] || prompts.strategy;
 
-    // Build message content — add PDF if uploaded
-    type ContentBlock =
-      | { type: "text"; text: string }
-      | { type: "document"; source: { type: "base64"; media_type: "application/pdf"; data: string } };
-
-    const messageContent: ContentBlock[] = [];
-
-    if (pdfBase64) {
-      messageContent.push({
-        type: "document",
-        source: {
-          type: "base64",
-          media_type: "application/pdf",
-          data: pdfBase64,
-        },
-      });
-    }
-
-    messageContent.push({ type: "text", text: prompt });
-
     const apiRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -87,7 +66,7 @@ Return: {"score":68,"summary":"Comprehensive summary","metrics":{"Revenue":"$XM"
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
         max_tokens: 2000,
-        messages: [{ role: "user", content: messageContent }],
+        messages: [{ role: "user", content: prompt }],
       }),
     });
 
