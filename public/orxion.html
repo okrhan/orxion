@@ -770,11 +770,29 @@ function setStmt(form,has){
 
 function handleUpload(form,input){
   if(!input.files[0])return;
-  const name=input.files[0].name;
+  const file=input.files[0];
+  const name=file.name;
   const icon=document.getElementById(form+'-file-icon');
   const lbl=document.getElementById(form+'-file-lbl');
   if(icon)icon.textContent='✅';
   if(lbl){lbl.textContent=name;lbl.style.color='var(--grn)';}
+  // Store file for base64 conversion
+  appState.uploadedFiles=appState.uploadedFiles||{};
+  appState.uploadedFiles[form]=file;
+}
+
+async function getBase64(form){
+  const file=appState.uploadedFiles&&appState.uploadedFiles[form];
+  if(!file)return null;
+  return new Promise((resolve)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const b64=reader.result.split(',')[1];
+      resolve(b64);
+    };
+    reader.onerror=()=>resolve(null);
+    reader.readAsDataURL(file);
+  });
 }
 
 /* VALIDATION */
@@ -815,6 +833,12 @@ function startLoad(moduleLabel,msgs){
 }
 
 async function callAPI(payload){
+  // Attach PDF base64 if available
+  const form=payload.module==='strategy'?'s':payload.module==='marketing'?'m':null;
+  if(form&&appState.hasStmt&&appState.hasStmt[form]){
+    const b64=await getBase64(form);
+    if(b64)payload.pdfBase64=b64;
+  }
   const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   if(!res.ok){const t=await res.json().catch(()=>({}));throw new Error(t.error||'API error '+res.status);}
   const json=await res.json();
