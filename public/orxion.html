@@ -466,6 +466,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <!-- Financials (hidden if has stmt) -->
     <div id="s-manual" style="margin-bottom:22px">
       <div class="sec-hdr"><span class="sec-num" style="background:var(--g1)">2</span><span class="sec-ttl">Financial Metrics</span></div>
+      <div id="s-manual-hint" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);border-radius:8px;font-size:12px;color:var(--blue2)">📄 Statement uploaded — enter the key figures below for deeper analysis</div>
       <div class="g2" style="margin-bottom:11px">
         <div><label class="flbl">Monthly Revenue ($)</label><input class="fi" type="number" id="s-rev" placeholder="0"></div>
         <div><label class="flbl">Monthly Costs ($)</label><input class="fi" type="number" id="s-costs" placeholder="0"></div>
@@ -833,12 +834,6 @@ function startLoad(moduleLabel,msgs){
 }
 
 async function callAPI(payload){
-  // Attach PDF base64 if available
-  const form=payload.module==='strategy'?'s':payload.module==='marketing'?'m':null;
-  if(form&&appState.hasStmt&&appState.hasStmt[form]){
-    const b64=await getBase64(form);
-    if(b64)payload.pdfBase64=b64;
-  }
   const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
   if(!res.ok){const t=await res.json().catch(()=>({}));throw new Error(t.error||'API error '+res.status);}
   const json=await res.json();
@@ -881,7 +876,8 @@ function runStrategy(){
     team:document.getElementById('s-team')?.value||'?',
     channels:sCh,
     website:document.getElementById('s-web').value||'N/A',
-    hasStatements:hasStmt
+    hasStatements:hasStmt,
+    stmtNote:stmtNote
   };
   startLoad('STRATEGY',['Parsing business profile…','Running financial model…','Benchmarking vs peers…','Mapping root causes…','Building strategic options…','Compiling report…']);
   callAPI(appState.fdata).then(parseReport).catch(e=>handleErr('err-strategy',e));
