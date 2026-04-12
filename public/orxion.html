@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orxion AI — Business Diagnosis Engine</title>
+<title>Orxion AI — Business Intelligence Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -13,1195 +13,1089 @@
 --bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.14);
 --txt:#F0F4FF;--txt2:#8B95AA;--txt3:#4A5568;
 --blue:#4F8EF7;--blue2:#7FB3FF;
---grn:#22D47A;--amb:#F5A623;--red:#FF5B5B;--pur:#A78BFA;
---cyan:#22D4C8;
+--grn:#22D47A;--amb:#F5A623;--red:#FF5B5B;--pur:#A78BFA;--cyan:#22D4C8;
 --g1:linear-gradient(135deg,#4F8EF7,#7B5CF6);
 --g2:linear-gradient(135deg,#22D47A,#4F8EF7);
---gcard:linear-gradient(145deg,rgba(79,142,247,.12),rgba(123,92,246,.06));
+--g3:linear-gradient(135deg,#F5A623,#FF5B5B);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-input,select,button{font-family:'Inter',sans-serif}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+input,select,button,textarea{font-family:'Inter',sans-serif}
 ::selection{background:rgba(79,142,247,.3);color:#fff}
-.mono{font-family:'JetBrains Mono',monospace}
 
-/* NOISE OVERLAY */
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+/* NOISE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
 
-/* ANIMATIONS */
-@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-@keyframes pulse{0%,100%{opacity:.2}50%{opacity:.8}}
-@keyframes countUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(79,142,247,.2)}50%{box-shadow:0 0 40px rgba(79,142,247,.5)}}
+@keyframes pulse{0%,100%{opacity:.2}50%{opacity:.9}}
 @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-@keyframes orb1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-30px) scale(1.1)}}
-@keyframes orb2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-30px,40px) scale(1.05)}}
-@keyframes scoreRing{from{stroke-dasharray:0 339}to{stroke-dasharray:var(--target) 339}}
-@keyframes barGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-@keyframes slideInRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes orb1{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-20px)}}
+@keyframes orb2{0%,100%{transform:translate(0,0)}50%{transform:translate(-20px,30px)}}
 
-.fu{animation:fadeUp .7s cubic-bezier(.22,1,.36,1) both}
-.fi2{animation:fadeIn .5s ease both}
-.d1{animation-delay:.08s}.d2{animation-delay:.17s}.d3{animation-delay:.27s}.d4{animation-delay:.38s}.d5{animation-delay:.5s}
+.fu{animation:fadeUp .65s cubic-bezier(.22,1,.36,1) both}
+.d1{animation-delay:.07s}.d2{animation-delay:.15s}.d3{animation-delay:.24s}.d4{animation-delay:.34s}
 
-/* PAGES */
-.page{display:none}
-.page.active{display:block}
+.page{display:none}.page.active{display:block}
 
 /* NAV */
-.nav{height:60px;display:flex;align-items:center;padding:0 40px;gap:14px;position:sticky;top:0;z-index:100;background:rgba(3,5,10,.85);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr)}
-.logo-mark{width:30px;height:30px;background:var(--g1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0}
+.nav{height:60px;display:flex;align-items:center;padding:0 40px;gap:14px;position:sticky;top:0;z-index:100;background:rgba(3,5,10,.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--bdr)}
 .logo-svg{display:flex;align-items:center;flex-shrink:0}
-.logo-text{font-weight:800;font-size:17px;letter-spacing:-0.5px;color:#fff}
-.logo-text span{color:#fff;background:none;-webkit-background-clip:unset;-webkit-text-fill-color:unset}
-.nav-badge{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--grn);font-family:'JetBrains Mono',monospace;letter-spacing:1px;border:1px solid rgba(34,212,122,.2);border-radius:20px;padding:3px 10px 3px 7px;background:rgba(34,212,122,.05)}
+.logo-text{font-weight:800;font-size:17px;letter-spacing:-.5px;color:#fff;margin-left:8px}
+.nav-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--grn);font-family:'JetBrains Mono',monospace;letter-spacing:1px;border:1px solid rgba(34,212,122,.2);border-radius:20px;padding:3px 10px 3px 7px;background:rgba(34,212,122,.05)}
 .live-dot{width:5px;height:5px;border-radius:50%;background:var(--grn);animation:blink 2s step-end infinite;flex-shrink:0}
 
 /* BUTTONS */
-.btn-glow{display:inline-flex;align-items:center;gap:8px;background:var(--g1);color:#fff;border:none;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px;position:relative;overflow:hidden}
-.btn-glow::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s}
-.btn-glow:hover::before{opacity:1}
-.btn-glow:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,142,247,.4)}
-.btn-glow:active{transform:none}
-.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--bdr);padding:10px 20px;border-radius:9px;font-size:13px;cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;transition:all .18s;font-weight:700;letter-spacing:-.2px;position:relative;overflow:hidden}
+.btn-blue{background:var(--g1);color:#fff;padding:13px 26px;border-radius:10px;font-size:14px}
+.btn-blue::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s}
+.btn-blue:hover::before{opacity:1}
+.btn-blue:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,142,247,.4)}
+.btn-grn{background:linear-gradient(135deg,#22D47A,#1DB965);color:#fff;padding:13px 26px;border-radius:10px;font-size:14px}
+.btn-grn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,212,122,.4)}
+.btn-amb{background:var(--g3);color:#fff;padding:13px 26px;border-radius:10px;font-size:14px}
+.btn-amb:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,166,35,.4)}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--bdr);padding:9px 18px;border-radius:9px;font-size:13px;cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace}
 .btn-ghost:hover{border-color:var(--bdr2);color:var(--txt);background:var(--surf)}
-.btn-submit{width:100%;background:var(--g1);color:#fff;border:none;padding:15px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:-0.3px}
-.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(79,142,247,.4)}
+.btn-submit{width:100%;border:none;padding:14px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;color:#fff}
+.btn-submit:hover{transform:translateY(-1px)}
 
 /* TICKER */
-.ticker-wrap{overflow:hidden;border-bottom:1px solid var(--bdr);background:var(--bg2);padding:9px 0}
+.ticker-wrap{overflow:hidden;border-bottom:1px solid var(--bdr);background:var(--bg2);padding:8px 0}
 .ticker-inner{display:flex;white-space:nowrap;animation:ticker 28s linear infinite}
-.tick-item{padding:0 28px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:1.5px;display:flex;align-items:center;gap:10px}
-.tick-up{color:var(--grn)}
-.tick-dn{color:var(--red)}
-
-/* HERO */
-.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;padding:80px 40px 60px;position:relative;overflow:hidden;max-width:1200px;margin:0 auto}
-.hero-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
-.orb-a{width:600px;height:600px;background:radial-gradient(circle,rgba(79,142,247,.15),transparent 70%);top:-100px;left:-100px;animation:orb1 14s ease-in-out infinite}
-.orb-b{width:500px;height:500px;background:radial-gradient(circle,rgba(123,92,246,.12),transparent 70%);bottom:-80px;right:-80px;animation:orb2 18s ease-in-out infinite}
-.orb-c{width:300px;height:300px;background:radial-gradient(circle,rgba(34,212,122,.08),transparent 70%);top:40%;left:40%;animation:orb1 22s ease-in-out infinite reverse}
-
-.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:5px 14px 5px 9px;margin-bottom:22px;font-size:11px;color:var(--blue2);font-family:'JetBrains Mono',monospace;letter-spacing:1px}
-.hero-h1{font-size:clamp(38px,4.5vw,62px);font-weight:900;line-height:1.0;letter-spacing:-2px;color:#fff;margin-bottom:18px}
-.hero-h1 .grad{background:linear-gradient(135deg,#4F8EF7,#A78BFA,#22D4C8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmer 4s linear infinite}
-.hero-sub{font-size:17px;color:var(--txt2);line-height:1.7;margin-bottom:32px;max-width:480px}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:44px}
-.hero-stats{display:flex;gap:32px}
-.hero-stat-val{font-size:26px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1}
-.hero-stat-lbl{font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-top:3px}
-
-/* DASHBOARD PREVIEW */
-.dash-preview{background:rgba(12,18,32,.8);border:1px solid var(--bdr);border-radius:16px;padding:20px;backdrop-filter:blur(20px);animation:float 6s ease-in-out infinite;position:relative}
-.dash-preview::before{content:'';position:absolute;inset:-1px;border-radius:17px;background:linear-gradient(135deg,rgba(79,142,247,.3),rgba(123,92,246,.15),transparent 60%);z-index:-1}
-.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.dash-dots{display:flex;gap:5px}
-.dash-dot{width:9px;height:9px;border-radius:50%}
-.mini-card{background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:9px;padding:10px 12px}
-.mini-lbl{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
-.mini-val{font-size:18px;font-weight:700;line-height:1}
-
-/* FEATURE CARDS */
-.feat-section{padding:80px 40px;max-width:1200px;margin:0 auto}
-.section-tag{display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;padding:3px 10px;background:rgba(79,142,247,.1);border-radius:4px}
-.section-h{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1.5px;color:#fff;line-height:1.1;margin-bottom:14px}
-.section-sub{font-size:16px;color:var(--txt2);line-height:1.7;max-width:560px;margin-bottom:52px}
-.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:16px;overflow:hidden}
-.feat-card{background:var(--bg2);padding:28px;transition:background .2s;cursor:default;position:relative;overflow:hidden}
-.feat-card::before{content:'';position:absolute;inset:0;background:var(--gcard);opacity:0;transition:opacity .3s}
-.feat-card:hover::before{opacity:1}
-.feat-card:hover{background:#0A1020}
-.feat-num{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;margin-bottom:12px;font-weight:500}
-.feat-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:7px;letter-spacing:-0.3px}
-.feat-desc{font-size:13px;color:var(--txt2);line-height:1.65}
-.feat-icon{font-size:28px;margin-bottom:14px}
-
-/* PROOF / HOW IT WORKS */
-.proof-section{padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
-.proof-inner{max-width:1200px;margin:0 auto}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
-.step{padding:36px 32px;position:relative}
-.step:not(:last-child)::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:20px;z-index:2}
-.step-num{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;margin-bottom:16px;background:var(--g1)}
-.step-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-0.3px}
-.step-desc{font-size:13px;color:var(--txt2);line-height:1.65}
-
-/* ANALYTICS PREVIEW */
-.analytics-section{padding:80px 40px;max-width:1200px;margin:0 auto}
-.chart-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-.chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;padding:20px}
-.chart-title{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
-
-/* SOCIAL PROOF */
-.proof-bar{padding:48px 40px;max-width:1200px;margin:0 auto;display:flex;gap:48px;align-items:center;border-top:1px solid var(--bdr)}
-.proof-stat{text-align:center;flex:1}
-.proof-val{font-size:36px;font-weight:900;letter-spacing:-1.5px;background:var(--g1);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.proof-lbl{font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-top:4px}
-
-/* TESTIMONIALS */
-.testi-section{padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr)}
-.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:1200px;margin:40px auto 0}
-.testi-card{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:14px;padding:24px}
-.testi-stars{color:var(--amb);font-size:13px;margin-bottom:12px}
-.testi-txt{font-size:14px;color:var(--txt2);line-height:1.7;margin-bottom:16px;font-style:italic}
-.testi-author{display:flex;align-items:center;gap:10px}
-.testi-avatar{width:36px;height:36px;border-radius:50%;background:var(--g1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
-.testi-name{font-size:13px;font-weight:600;color:#fff}
-.testi-role{font-size:11px;color:var(--txt3)}
-
-/* PRICING */
-.pricing-section{padding:80px 40px;max-width:1200px;margin:0 auto}
-.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:48px}
-.pricing-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:16px;padding:32px}
-.pricing-card.featured{border-color:rgba(79,142,247,.4);background:rgba(79,142,247,.06);position:relative;overflow:hidden}
-.pricing-card.featured::before{content:'';position:absolute;inset:-1px;border-radius:17px;background:linear-gradient(135deg,rgba(79,142,247,.4),rgba(123,92,246,.2),transparent 60%);z-index:-1}
-.pricing-badge{display:inline-block;background:var(--g1);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
-.pricing-name{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
-.pricing-price{font-size:42px;font-weight:900;color:#fff;letter-spacing:-2px;line-height:1;margin-bottom:4px}
-.pricing-per{font-size:13px;color:var(--txt3);margin-bottom:20px}
-.pricing-features{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
-.pricing-feat{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--txt2)}
-.pricing-feat-check{color:var(--grn);font-size:14px;flex-shrink:0}
-
-/* CTA */
-.cta-section{padding:96px 40px;text-align:center;position:relative;overflow:hidden}
-.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(79,142,247,.1),transparent 70%);pointer-events:none}
-.cta-h{font-size:clamp(36px,6vw,72px);font-weight:900;letter-spacing:-2px;color:#fff;line-height:1;margin-bottom:18px}
-.cta-h .grad{background:linear-gradient(135deg,#4F8EF7,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-footer{border-top:1px solid var(--bdr);padding:24px 40px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)}
 
 /* FORM */
-.form-wrap{background:var(--bg2);min-height:calc(100vh - 60px)}
-.form-inner{max-width:640px;margin:0 auto;padding:52px 24px 88px}
-.form-header{margin-bottom:36px}
-.form-tag{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:block}
-.form-h1{font-size:30px;font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:8px}
-.form-sub{font-size:14px;color:var(--txt2);line-height:1.7}
-.form-card{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:16px;padding:32px}
-.form-card:hover{border-color:var(--bdr2)}
-.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--bdr)}
-.sec-num{width:22px;height:22px;border-radius:6px;background:var(--g1);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sec-title{font-size:12px;font-weight:600;color:var(--txt2);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase}
-.field-lbl{display:block;font-size:10px;font-weight:500;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;font-family:'JetBrains Mono',monospace}
-.field-req{color:var(--blue);margin-left:2px}
 .fi{width:100%;padding:11px 14px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:9px;color:var(--txt);font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s}
-.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.15)}
+.fi:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
 .fi::placeholder{color:var(--txt3)}
 .fi option{background:#0C1220;color:var(--txt)}
 .fi-sel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234A5568' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.ch-pill{padding:7px 13px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);font-size:11px;font-weight:500;cursor:pointer;transition:all .14s;white-space:nowrap;font-family:'JetBrains Mono',monospace;letter-spacing:.3px}
+.flbl{display:block;font-size:10px;font-weight:500;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;font-family:'JetBrains Mono',monospace}
+.freq{color:var(--blue);margin-left:2px}
+.sec-hdr{display:flex;align-items:center;gap:9px;margin-bottom:16px;padding-bottom:11px;border-bottom:1px solid var(--bdr)}
+.sec-num{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.sec-ttl{font-size:11px;font-weight:600;color:var(--txt2);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase}
+.ch-pill{padding:6px 12px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--txt3);font-size:11px;cursor:pointer;transition:all .14s;white-space:nowrap;font-family:'JetBrains Mono',monospace}
 .ch-pill:hover{border-color:var(--bdr2);color:var(--txt2)}
 .ch-pill.on{border-color:var(--blue);background:rgba(79,142,247,.12);color:var(--blue)}
-.form-error{display:none;background:rgba(255,91,91,.1);border:1px solid rgba(255,91,91,.3);border-radius:8px;padding:10px 14px;margin-bottom:20px;color:var(--red);font-size:12px;font-family:'JetBrains Mono',monospace}
+.form-err{display:none;background:rgba(255,91,91,.1);border:1px solid rgba(255,91,91,.3);border-radius:8px;padding:10px 14px;margin-bottom:18px;color:var(--red);font-size:12px;font-family:'JetBrains Mono',monospace}
+.form-card{background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:16px;padding:28px}
 
 /* LOADING */
-.load-wrap{min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--bg)}
-.load-rings{position:relative;width:100px;height:100px;margin-bottom:40px}
+.load-wrap{min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
 .ring{position:absolute;border-radius:50%;border:2px solid transparent}
-.ring1{inset:0;border-top-color:var(--blue);animation:spin 1.8s linear infinite}
-.ring2{inset:12px;border-top-color:var(--pur);animation:spin 2.4s linear infinite reverse}
-.ring3{inset:24px;border-top-color:var(--cyan);animation:spin 3s linear infinite}
-.ring-core{position:absolute;inset:36px;border-radius:50%;background:var(--blue);opacity:.3;animation:pulse 1.5s ease infinite}
-.prog-bar{width:240px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:24px;position:relative;overflow:hidden}
-.prog-fill{position:absolute;top:0;left:0;height:100%;border-radius:2px;transition:width .3s ease;background:linear-gradient(90deg,var(--blue),var(--pur))}
-.prog-shimmer{position:absolute;top:0;left:0;width:40px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 1.5s infinite}
+.prog-bar{width:240px;height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:22px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width .3s ease;background:linear-gradient(90deg,var(--blue),var(--pur))}
 
-/* REPORT */
-.rep-nav{position:sticky;top:60px;z-index:90;background:rgba(3,5,10,.9);border-bottom:1px solid var(--bdr);backdrop-filter:blur(24px);padding:0 28px}
-.rep-nav-inner{max-width:1000px;margin:0 auto;height:54px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.rep-body{background:var(--bg);min-height:calc(100vh - 114px)}
-.rep-inner{max-width:1000px;margin:0 auto;padding:28px 24px 88px}
-
-.rep-cover{background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(123,92,246,.06));border:1px solid rgba(79,142,247,.2);border-radius:16px;padding:32px;margin-bottom:20px}
-.rep-co{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:4px}
-.rep-meta{font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
-
-.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
-.kpi{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:12px;padding:16px;transition:border-color .2s,transform .2s}
-.kpi:hover{border-color:var(--bdr2);transform:translateY(-2px)}
-.kpi-lbl{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
-.kpi-val{font-size:24px;font-weight:800;line-height:1;letter-spacing:-0.5px}
-.kpi-note{font-size:10px;color:var(--txt3);margin-top:4px;font-family:'JetBrains Mono',monospace}
-
-.rep-card{background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:14px;padding:22px;margin-bottom:14px;transition:border-color .2s}
-.rep-card:hover{border-color:var(--bdr2)}
-.rep-card-title{font-size:10px;font-weight:500;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:7px}
-.rep-card-title::before{content:'';display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--g1)}
-
-.finding{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);align-items:flex-start}
+/* REPORT CARDS */
+.rcard{background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:14px;padding:22px;margin-bottom:14px;transition:border-color .2s}
+.rcard:hover{border-color:var(--bdr2)}
+.rcard-title{font-size:10px;font-weight:500;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.rcard-title::before{content:'';display:inline-block;width:3px;height:12px;border-radius:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:11px;padding:14px;transition:transform .2s,border-color .2s}
+.kpi:hover{transform:translateY(-2px);border-color:var(--bdr2)}
+.kpi-lbl{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.finding{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);align-items:flex-start}
 .finding:last-child{border-bottom:none}
-.badge{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px;letter-spacing:.5px}
-.badge-crit{background:rgba(255,91,91,.15);color:var(--red)}
-.badge-high{background:rgba(245,166,35,.15);color:var(--amb)}
-.badge-pos{background:rgba(34,212,122,.15);color:var(--grn)}
-.finding-txt{font-size:13px;color:var(--txt2);line-height:1.6}
-
-.root-box{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15);border-radius:10px;padding:14px;margin-bottom:9px}
+.badge{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:2px;letter-spacing:.3px}
+.root-box{background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.15);border-radius:9px;padding:12px;margin-bottom:8px}
 .root-box:last-child{margin-bottom:0}
-.root-lbl{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1.5px;margin-bottom:5px}
-.root-txt{font-size:12px;color:var(--txt2);line-height:1.65}
-
-.pillar{border-left:3px solid;padding:14px 16px;margin-bottom:10px;background:rgba(255,255,255,.02);border-radius:0 10px 10px 0}
+.pillar{border-left:3px solid;padding:13px 15px;margin-bottom:9px;background:rgba(255,255,255,.02);border-radius:0 9px 9px 0}
 .pillar:last-child{margin-bottom:0}
-.pillar-num{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:5px;letter-spacing:1px}
-.pillar-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:5px;letter-spacing:-0.2px}
-.pillar-desc{font-size:12px;color:var(--txt2);line-height:1.65}
+.phase-hdr{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid var(--bdr)}
+.phase-item{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:5px;font-size:12px;color:var(--txt2);line-height:1.5}
 
-.phase-hdr{font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;padding-bottom:8px;margin-bottom:10px;border-bottom:1px solid var(--bdr)}
-.phase-item{display:flex;gap:8px;align-items:flex-start;padding:7px 10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;font-size:12px;color:var(--txt2);line-height:1.5}
-.phase-arrow{font-size:11px;flex-shrink:0;margin-top:1px}
+/* MODULE SELECT CARDS */
+.mod-card{background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:20px;padding:36px 32px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.mod-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s}
+.mod-card:hover{transform:translateY(-4px)}
+.mod-card:hover::before{opacity:1}
+.mod-card.blue{border-color:rgba(79,142,247,.15)}
+.mod-card.blue::before{background:linear-gradient(135deg,rgba(79,142,247,.08),transparent)}
+.mod-card.blue:hover{border-color:rgba(79,142,247,.4);box-shadow:0 20px 60px rgba(79,142,247,.15)}
+.mod-card.grn{border-color:rgba(34,212,122,.15)}
+.mod-card.grn::before{background:linear-gradient(135deg,rgba(34,212,122,.08),transparent)}
+.mod-card.grn:hover{border-color:rgba(34,212,122,.4);box-shadow:0 20px 60px rgba(34,212,122,.12)}
+.mod-card.amb{border-color:rgba(245,166,35,.15)}
+.mod-card.amb::before{background:linear-gradient(135deg,rgba(245,166,35,.08),transparent)}
+.mod-card.amb:hover{border-color:rgba(245,166,35,.4);box-shadow:0 20px 60px rgba(245,166,35,.12)}
 
 @media(max-width:768px){
-  .hero{grid-template-columns:1fr;gap:40px;padding:60px 20px 40px}
-  .steps,.chart-grid,.pricing-grid,.testi-grid,.kpi-grid{grid-template-columns:1fr}
-  .g2,.g3{grid-template-columns:1fr}
   .nav{padding:0 20px}
-  .proof-bar{flex-wrap:wrap;gap:24px}
+  .hero-grid{grid-template-columns:1fr!important}
+  .mod-grid{grid-template-columns:1fr!important}
+  .kpi-grid,.g2,.g3{grid-template-columns:1fr 1fr!important}
+  .plan-grid{grid-template-columns:1fr!important}
 }
 </style>
 </head>
 <body>
 
-<!-- LANDING -->
+<!-- ═══ LANDING ═══════════════════════════════════════════ -->
 <div id="page-land" class="page active">
 <nav class="nav">
   <div class="logo-svg">
-    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
-      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+    <svg width="28" height="28" viewBox="0 0 80 80" fill="none">
+      <defs><linearGradient id="lg0" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
+      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg0)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
       <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
       <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
-      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
+      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".55"/>
       <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
       <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
       <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".35"/>
+      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".35"/>
+      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".35"/>
+      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".35"/>
     </svg>
   </div>
-  <div class="logo-text">Orx<span>ion</span> AI</div>
-  <div class="nav-badge"><span class="live-dot"></span>LIVE ENGINE</div>
+  <span class="logo-text">Orxion AI</span>
+  <div class="nav-pill"><span class="live-dot"></span>LIVE ENGINE</div>
   <div style="flex:1"></div>
   <button class="btn-ghost" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Pricing</button>
-  <button class="btn-glow" style="padding:10px 22px;font-size:13px" onclick="goTo('form')">Start Analysis →</button>
+  <button class="btn btn-blue" style="margin-left:8px" onclick="document.getElementById('modules').scrollIntoView({behavior:'smooth'})">Get Started →</button>
 </nav>
 
+<!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker-inner" id="ticker-el"></div>
 </div>
 
 <!-- HERO -->
-<section style="position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(79,142,247,.04) 0%,transparent 60%)">
-<div class="hero" style="max-width:1200px;margin:0 auto">
-  <div class="hero-orb orb-a"></div>
-  <div class="hero-orb orb-b"></div>
-  <div class="hero-orb orb-c"></div>
-  <div style="position:relative;z-index:1">
-    <div class="hero-eyebrow fu"><span class="live-dot"></span>AI-Powered Business Diagnosis</div>
-    <h1 class="hero-h1 fu d1">Stop guessing.<br>Start<br><span class="grad">deciding.</span></h1>
-    <p class="hero-sub fu d2">Orxion AI analyzes your business across 12 dimensions using Big 4 frameworks and delivers a McKinsey-grade strategy report — in under 90 seconds.</p>
-    <div class="hero-actions fu d3">
-      <button class="btn-glow" style="font-size:16px;padding:16px 34px" onclick="goTo('form')">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l7 7-7 7M15 8H1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        Run Free Analysis
-      </button>
-      <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works</button>
-    </div>
-    <div class="hero-stats fu d4">
-      <div><div class="hero-stat-val" id="stat-time">0s</div><div class="hero-stat-lbl">Time to insight</div></div>
-      <div style="width:1px;background:var(--bdr)"></div>
-      <div><div class="hero-stat-val" id="stat-dims">0</div><div class="hero-stat-lbl">Dimensions scored</div></div>
-      <div style="width:1px;background:var(--bdr)"></div>
-      <div><div class="hero-stat-val">Big 4</div><div class="hero-stat-lbl">Methodology</div></div>
-    </div>
-  </div>
+<section style="min-height:92vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px 60px;text-align:center;position:relative;overflow:hidden">
+  <div style="position:absolute;top:-100px;left:20%;width:500px;height:500px;background:radial-gradient(circle,rgba(79,142,247,.1),transparent 70%);pointer-events:none;animation:orb1 16s ease-in-out infinite"></div>
+  <div style="position:absolute;bottom:-80px;right:15%;width:400px;height:400px;background:radial-gradient(circle,rgba(123,92,246,.08),transparent 70%);pointer-events:none;animation:orb2 20s ease-in-out infinite"></div>
+  <div style="position:absolute;top:30%;left:5%;width:300px;height:300px;background:radial-gradient(circle,rgba(34,212,122,.05),transparent 70%);pointer-events:none;animation:orb1 24s ease-in-out infinite reverse"></div>
 
-  <!-- DASHBOARD PREVIEW — compact -->
-  <div class="fu d2" style="position:relative;z-index:1">
-    <div class="dash-preview" style="padding:16px">
-      <div class="dash-header" style="margin-bottom:12px">
-        <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase">Sample Report</span>
-        <div class="dash-dots"><div class="dash-dot" style="background:#FF5B5B"></div><div class="dash-dot" style="background:#F5A623"></div><div class="dash-dot" style="background:#22D47A"></div></div>
-      </div>
-      <!-- Score + summary line -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bdr)">
-        <svg width="64" height="64" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
-          <circle cx="32" cy="32" r="26" fill="none" stroke="url(#sg)" stroke-width="5" stroke-dasharray="0 163" stroke-linecap="round" transform="rotate(-90 32 32)" id="hero-ring-arc"/>
-          <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#A78BFA"/></linearGradient></defs>
-          <text x="32" y="29" text-anchor="middle" fill="#fff" font-size="14" font-weight="800" font-family="Inter,sans-serif" id="hero-score-num">0</text>
-          <text x="32" y="40" text-anchor="middle" fill="#22D47A" font-size="7" font-weight="600" font-family="Inter,sans-serif">STRONG</text>
-        </svg>
-        <div style="flex:1">
-          <div style="font-size:11px;font-weight:600;color:#fff;margin-bottom:3px">Acme Analytics · SaaS</div>
-          <div style="font-size:11px;color:var(--txt3);line-height:1.5">CAC exceeds LTV in 2 of 3 segments. Immediate action required on pricing structure.</div>
-        </div>
-      </div>
-      <!-- 4 mini metrics -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:10px">
-        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">LTV:CAC</div><div style="font-size:14px;font-weight:700;color:var(--grn)">3.2×</div></div>
-        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">MARGIN</div><div style="font-size:14px;font-weight:700;color:var(--amb)">28%</div></div>
-        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">RUNWAY</div><div style="font-size:14px;font-weight:700;color:var(--red)">6 mo</div></div>
-        <div style="background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:7px;padding:8px 9px"><div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:3px">CHURN</div><div style="font-size:14px;font-weight:700;color:var(--blue)">2.1%</div></div>
-      </div>
-      <!-- Revenue sparkline -->
-      <div style="background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:7px;padding:9px 11px">
-        <div style="font-size:8px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:6px;letter-spacing:1px">REVENUE TREND</div>
-        <div style="height:36px"><canvas id="hero-rev"></canvas></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:7px;margin-top:10px;padding:7px 10px;background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.15);border-radius:7px">
-        <div style="width:5px;height:5px;border-radius:50%;background:var(--blue);animation:pulse 1.5s ease infinite;flex-shrink:0"></div>
-        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue2)">3 critical issues identified · Report ready in 74s</span>
-      </div>
+  <div style="position:relative;max-width:800px">
+    <div class="fu" style="display:inline-flex;align-items:center;gap:7px;background:rgba(79,142,247,.1);border:1px solid rgba(79,142,247,.25);border-radius:20px;padding:5px 14px 5px 9px;margin-bottom:24px;font-size:11px;color:var(--blue2);font-family:'JetBrains Mono',monospace;letter-spacing:1px">
+      <span class="live-dot"></span>AI BUSINESS INTELLIGENCE PLATFORM
+    </div>
+    <h1 class="fu d1" style="font-size:clamp(40px,7vw,78px);font-weight:900;line-height:1.0;letter-spacing:-2.5px;color:#fff;margin-bottom:20px">
+      The intelligence<br>your business<br><span style="background:linear-gradient(135deg,#4F8EF7,#A78BFA,#22D4C8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmer 4s linear infinite">deserves.</span>
+    </h1>
+    <p class="fu d2" style="font-size:18px;color:var(--txt2);line-height:1.7;margin-bottom:36px;max-width:540px;margin-left:auto;margin-right:auto">
+      Strategy diagnosis, investor valuation, and marketing audit — powered by AI, delivered in under 90 seconds.
+    </p>
+    <div class="fu d3" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:52px">
+      <button class="btn btn-blue" style="font-size:16px;padding:16px 36px" onclick="document.getElementById('modules').scrollIntoView({behavior:'smooth'})">Choose Your Analysis →</button>
+      <button class="btn-ghost" style="font-size:14px" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">How it works</button>
+    </div>
+    <div class="fu d4" style="display:flex;justify-content:center;gap:40px;flex-wrap:wrap">
+      <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px">&lt;90s</div><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;margin-top:3px">REPORT DELIVERY</div></div>
+      <div style="width:1px;background:var(--bdr)"></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px">3</div><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;margin-top:3px">INTELLIGENCE MODULES</div></div>
+      <div style="width:1px;background:var(--bdr)"></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px">Big 4</div><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;margin-top:3px">FRAMEWORKS</div></div>
+      <div style="width:1px;background:var(--bdr)"></div>
+      <div style="text-align:center"><div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-1px">Free</div><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;margin-top:3px">TO START</div></div>
     </div>
   </div>
-</div>
 </section>
 
-<!-- SOCIAL PROOF BAR -->
-<div class="proof-bar" style="border-top:1px solid var(--bdr);border-bottom:1px solid var(--bdr);background:var(--bg2)">
-  <div class="proof-stat"><div class="proof-val">&lt; 90s</div><div class="proof-lbl">FULL REPORT IN YOUR HANDS</div></div>
-  <div style="width:1px;height:48px;background:var(--bdr)"></div>
-  <div class="proof-stat"><div class="proof-val">12</div><div class="proof-lbl">DIMENSIONS SCORED</div></div>
-  <div style="width:1px;height:48px;background:var(--bdr)"></div>
-  <div class="proof-stat"><div class="proof-val">Free</div><div class="proof-lbl">TO START — NO CARD NEEDED</div></div>
-  <div style="width:1px;height:48px;background:var(--bdr)"></div>
-  <div class="proof-stat"><div class="proof-val">Big 4</div><div class="proof-lbl">STRATEGY FRAMEWORKS</div></div>
-</div>
+<!-- MODULE SELECT -->
+<section id="modules" style="padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr)">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:52px">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;padding:3px 10px;background:rgba(79,142,247,.1);border-radius:4px;display:inline-block">Choose your analysis</div>
+      <h2 style="font-size:clamp(26px,4vw,42px);font-weight:900;letter-spacing:-1.5px;color:#fff;line-height:1.1">What do you need today?</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px" class="mod-grid">
 
-<!-- FEATURES -->
-<div class="feat-section">
-  <div class="section-tag">What you get</div>
-  <h2 class="section-h">McKinsey-grade analysis.<br>In 90 seconds.</h2>
-  <p class="section-sub">We don't give you dashboards. We give you the same structured diagnosis that top strategy consultants charge $50,000 for — powered by AI and delivered instantly.</p>
-  <div class="feat-grid">
-    <div class="feat-card">
-      <div class="feat-num" style="color:var(--blue)">01</div>
-      <div class="feat-title">Business Health Score</div>
-      <div class="feat-desc">0–100 composite score across 12 operational and financial dimensions. Know exactly where you stand, not just how you feel.</div>
+      <!-- STRATEGY -->
+      <div class="mod-card blue" onclick="goTo('form-strategy')">
+        <div style="position:relative;z-index:1">
+          <div style="width:48px;height:48px;background:rgba(79,142,247,.15);border:1px solid rgba(79,142,247,.3);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2" stroke-linecap="round"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18"/></svg>
+          </div>
+          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:1.5px;margin-bottom:8px">STRATEGY</div>
+          <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:10px">Business Diagnosis</div>
+          <div style="font-size:14px;color:var(--txt2);line-height:1.65;margin-bottom:24px">Full McKinsey-grade analysis. Health score, root causes, strategic pillars, 90-day action plan, peer benchmarking.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px">
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue2);background:rgba(79,142,247,.1);padding:3px 8px;border-radius:4px">Health Score</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue2);background:rgba(79,142,247,.1);padding:3px 8px;border-radius:4px">Root Causes</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue2);background:rgba(79,142,247,.1);padding:3px 8px;border-radius:4px">90-Day Plan</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue2);background:rgba(79,142,247,.1);padding:3px 8px;border-radius:4px">Benchmarking</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px">$199<span style="font-size:13px;color:var(--txt3);font-weight:400">/report</span></div>
+            <div style="background:rgba(79,142,247,.2);border:1px solid rgba(79,142,247,.4);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--blue2)">Start →</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VALUATION -->
+      <div class="mod-card grn" onclick="goTo('form-valuation')">
+        <div style="position:relative;z-index:1">
+          <div style="width:48px;height:48px;background:rgba(34,212,122,.12);border:1px solid rgba(34,212,122,.25);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22D47A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:1.5px;margin-bottom:8px">VALUATION</div>
+          <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:10px">Investor Valuation</div>
+          <div style="font-size:14px;color:var(--txt2);line-height:1.65;margin-bottom:24px">Bull/base/bear valuation range, revenue multiples, DCF assumptions, investor readiness score, and pitch-ready summary.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px">
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);padding:3px 8px;border-radius:4px">Valuation Range</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);padding:3px 8px;border-radius:4px">Revenue Multiple</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);padding:3px 8px;border-radius:4px">Investor Ready Score</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);padding:3px 8px;border-radius:4px">Pitch Summary</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px">$129<span style="font-size:13px;color:var(--txt3);font-weight:400">/report</span></div>
+            <div style="background:rgba(34,212,122,.15);border:1px solid rgba(34,212,122,.35);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--grn)">Start →</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MARKETING -->
+      <div class="mod-card amb" onclick="goTo('form-marketing')">
+        <div style="position:relative;z-index:1">
+          <div style="width:48px;height:48px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.25);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1.5px;margin-bottom:8px">MARKETING</div>
+          <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:10px">Marketing Audit</div>
+          <div style="font-size:14px;color:var(--txt2);line-height:1.65;margin-bottom:24px">Website, SEO, messaging, and social media audit. Conversion gaps, growth opportunities, competitor positioning analysis.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px">
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);background:rgba(245,166,35,.1);padding:3px 8px;border-radius:4px">Website Audit</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);background:rgba(245,166,35,.1);padding:3px 8px;border-radius:4px">SEO Analysis</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);background:rgba(245,166,35,.1);padding:3px 8px;border-radius:4px">Social Media</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);background:rgba(245,166,35,.1);padding:3px 8px;border-radius:4px">Growth Plan</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px">$99<span style="font-size:13px;color:var(--txt3);font-weight:400">/report</span></div>
+            <div style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.35);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;color:var(--amb)">Start →</div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="feat-card">
-      <div class="feat-num" style="color:var(--red)">02</div>
-      <div class="feat-title">Key Problems Ranked</div>
-      <div class="feat-desc">3–5 critical issues ranked by impact and urgency. Stop firefighting and focus on what actually matters.</div>
-    </div>
-    <div class="feat-card">
-      <div class="feat-num" style="color:var(--amb)">03</div>
-      <div class="feat-title">Root Cause Analysis</div>
-      <div class="feat-desc">Structural, operational, and market-level causes behind each problem. Fix the disease, not the symptoms.</div>
-    </div>
-    <div class="feat-card">
-      <div class="feat-num" style="color:var(--grn)">04</div>
-      <div class="feat-title">Strategic Pillars</div>
-      <div class="feat-desc">Three focused strategic directions derived from your specific data. Not generic advice — your actual situation.</div>
-    </div>
-    <div class="feat-card">
-      <div class="feat-num" style="color:var(--pur)">05</div>
-      <div class="feat-title">90-Day Action Plan</div>
-      <div class="feat-desc">Phased, concrete steps calibrated to your stage and team size. Know exactly what to do Monday morning.</div>
-    </div>
-    <div class="feat-card">
-      <div class="feat-num" style="color:var(--cyan)">06</div>
-      <div class="feat-title">Global Benchmarking</div>
-      <div class="feat-desc">How does your business compare to peers in your sector and stage? Benchmarked against real market data.</div>
+
+    <!-- BUNDLE -->
+    <div style="margin-top:20px;padding:28px 32px;background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(123,92,246,.05));border:1px solid rgba(79,142,247,.2);border-radius:16px;display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:220px">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);letter-spacing:1.5px;margin-bottom:6px">BUNDLE — BEST VALUE</div>
+        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:4px">Complete Business Intelligence</div>
+        <div style="font-size:13px;color:var(--txt2)">All 3 modules — Strategy + Valuation + Marketing. One report, full picture.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="text-align:right">
+          <div style="font-size:14px;color:var(--txt3);text-decoration:line-through">$427</div>
+          <div style="font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px">$349<span style="font-size:13px;color:var(--txt3);font-weight:400">/bundle</span></div>
+        </div>
+        <button class="btn btn-blue" onclick="goTo('form-bundle')" style="white-space:nowrap">Get Bundle →</button>
+      </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- HOW IT WORKS -->
-<div class="proof-section" id="how">
-  <div class="proof-inner">
+<section id="how" style="padding:80px 40px;border-top:1px solid var(--bdr)">
+  <div style="max-width:1100px;margin:0 auto">
     <div style="text-align:center;margin-bottom:52px">
-      <div class="section-tag">Process</div>
-      <h2 class="section-h">Three steps. Under 90 seconds.</h2>
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;padding:3px 10px;background:rgba(79,142,247,.1);border-radius:4px;display:inline-block">Process</div>
+      <h2 style="font-size:clamp(26px,4vw,42px);font-weight:900;letter-spacing:-1.5px;color:#fff">Three steps. Under 90 seconds.</h2>
     </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-title">Input your data</div>
-        <div class="step-desc">Business metrics, financials, team size, active channels. Upload financial statements if you have them. Under 3 minutes.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:16px;overflow:hidden">
+      <div style="background:var(--bg2);padding:32px;position:relative;overflow:hidden">
+        <div style="font-size:44px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;margin-bottom:16px;user-select:none">01</div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:1.5px;margin-bottom:8px">SELECT MODULE</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:7px">Choose your analysis</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.65">Strategy, Valuation, or Marketing — or all three in one bundle.</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--g1);opacity:.5"></div>
       </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-title">AI analyzes</div>
-        <div class="step-desc">12 business dimensions assessed with Big 4 frameworks, global peer benchmarking, and root cause modeling.</div>
+      <div style="background:var(--bg2);padding:32px;position:relative;overflow:hidden">
+        <div style="font-size:44px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;margin-bottom:16px;user-select:none">02</div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);letter-spacing:1.5px;margin-bottom:8px">INPUT DATA</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:7px">Enter your details</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.65">Company info, financials, or website URL. Upload statements for deeper analysis.</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#A78BFA,#7B5CF6);opacity:.5"></div>
       </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Get your strategy</div>
-        <div class="step-desc">Health score, root causes, pillars, 90-day plan with impact sizing. Export a board-ready PDF instantly.</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ANALYTICS PREVIEW -->
-<div class="analytics-section">
-  <div style="text-align:center;margin-bottom:48px">
-    <div class="section-tag">Live analytics</div>
-    <h2 class="section-h">Data-driven insights,<br>beautifully visualized</h2>
-  </div>
-  <div class="chart-grid">
-    <div class="chart-card">
-      <div class="chart-title">Health dimensions</div>
-      <canvas id="land-radar" height="180"></canvas>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Revenue trajectory</div>
-      <div style="height:180px"><canvas id="land-rev"></canvas></div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title">Channel performance</div>
-      <div style="height:180px"><canvas id="land-ch"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- DIFFERENTIATION -->
-<div style="padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr)">
-  <div style="max-width:1200px;margin:0 auto">
-    <div style="text-align:center;margin-bottom:52px">
-      <div class="section-tag">Why Orxion</div>
-      <h2 class="section-h">Not a dashboard.<br>A decision engine.</h2>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div style="border:1px solid rgba(255,91,91,.2);border-radius:16px;padding:32px;background:rgba(255,91,91,.04)">
-        <div style="display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--red);background:rgba(255,91,91,.1);border:1px solid rgba(255,91,91,.2);border-radius:20px;padding:3px 12px;margin-bottom:20px;letter-spacing:1px;font-weight:700">OTHERS GIVE YOU</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Dashboards full of charts</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Vanity metrics</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Generic best-practice tips</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>Raw data without meaning</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--txt2)"><span style="color:var(--red);font-weight:700;flex-shrink:0;font-size:16px">✕</span>$50,000 consulting bills</div>
-        </div>
-      </div>
-      <div style="border:1px solid rgba(34,212,122,.25);border-radius:16px;padding:32px;background:rgba(34,212,122,.04);position:relative;overflow:hidden">
-        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(34,212,122,.1),transparent 70%);pointer-events:none"></div>
-        <div style="display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);border:1px solid rgba(34,212,122,.25);border-radius:20px;padding:3px 12px;margin-bottom:20px;letter-spacing:1px;font-weight:700">ORXION GIVES YOU</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Business diagnosis with root causes</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Ranked priorities by impact</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Global peer benchmarking</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Concrete 90-day action plan</div>
-          <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:#fff"><span style="color:var(--grn);font-weight:700;flex-shrink:0;font-size:16px">→</span>Board-ready PDF in 90 seconds</div>
-        </div>
+      <div style="background:var(--bg2);padding:32px;position:relative;overflow:hidden">
+        <div style="font-size:44px;font-weight:900;color:rgba(255,255,255,.04);line-height:1;margin-bottom:16px;user-select:none">03</div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:1.5px;margin-bottom:8px">GET REPORT</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:7px">Receive your analysis</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.65">Full AI report with charts, recommendations, and board-ready PDF export.</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(135deg,#22D47A,#4F8EF7);opacity:.5"></div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- TESTIMONIALS -->
-<div class="testi-section">
-  <div style="max-width:1200px;margin:0 auto;text-align:center">
-    <div class="section-tag">Social proof</div>
-    <h2 class="section-h">Trusted by founders<br>and executives</h2>
-  </div>
-  <div class="testi-grid">
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <div class="testi-txt">"We spent 3 months trying to figure out why growth stalled. Orxion identified the root cause in 90 seconds — our CAC had quietly exceeded LTV. Game changer."</div>
-      <div class="testi-author">
-        <div class="testi-avatar">AK</div>
-        <div><div class="testi-name">Anar Kerimov</div><div class="testi-role">CEO · SaaS startup, Baku</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <div class="testi-txt">"I used to pay a consultant AZN 8,000 for a report like this. Orxion gave me a better one in 60 seconds. The 90-day action plan alone was worth it."</div>
-      <div class="testi-author">
-        <div class="testi-avatar">LH</div>
-        <div><div class="testi-name">Leyla Həsənova</div><div class="testi-role">Founder · E-commerce, Tbilisi</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <div class="testi-txt">"The benchmarking section opened our eyes. We thought we were performing well until we saw how far behind peers we were on margin. Restructured our entire cost base."</div>
-      <div class="testi-author">
-        <div class="testi-avatar">RM</div>
-        <div><div class="testi-name">Rauf Məmmədov</div><div class="testi-role">CFO · Logistics company</div></div>
-      </div>
-    </div>
-  </div>
-</div>
+</section>
 
 <!-- PRICING -->
-<div class="pricing-section" id="pricing">
-  <div style="text-align:center;margin-bottom:0">
-    <div class="section-tag">Pricing</div>
-    <h2 class="section-h">Start free. Scale fast.</h2>
-    <p style="font-size:16px;color:var(--txt2);margin-top:12px">No credit card required. Full report on first analysis.</p>
+<section id="pricing" style="padding:80px 40px;background:var(--bg2);border-top:1px solid var(--bdr)">
+  <div style="max-width:1100px;margin:0 auto;text-align:center">
+    <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;padding:3px 10px;background:rgba(79,142,247,.1);border-radius:4px;display:inline-block">Pricing</div>
+    <h2 style="font-size:clamp(26px,4vw,42px);font-weight:900;letter-spacing:-1.5px;color:#fff;margin-bottom:8px">Simple. Per-report pricing.</h2>
+    <p style="font-size:15px;color:var(--txt2);margin-bottom:48px">No subscriptions. Pay only for what you need.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px">
+      <div style="background:var(--bg);border:1px solid var(--bdr);border-radius:16px;padding:28px;text-align:left">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:1.5px;margin-bottom:10px">STRATEGY</div>
+        <div style="font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:3px">$199</div>
+        <div style="font-size:12px;color:var(--txt3);margin-bottom:18px">per report</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--txt2)">
+          <div style="display:flex;gap:8px"><span style="color:var(--blue)">✓</span>Full business diagnosis</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--blue)">✓</span>Health score (0–100)</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--blue)">✓</span>Root cause analysis</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--blue)">✓</span>Peer benchmarking</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--blue)">✓</span>90-day action plan</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--blue)">✓</span>PDF export</div>
+        </div>
+        <button class="btn btn-blue" style="width:100%;justify-content:center;margin-top:20px;padding:12px" onclick="goTo('form-strategy')">Start →</button>
+      </div>
+      <div style="background:var(--bg);border:1px solid rgba(34,212,122,.25);border-radius:16px;padding:28px;text-align:left">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:1.5px;margin-bottom:10px">VALUATION</div>
+        <div style="font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:3px">$129</div>
+        <div style="font-size:12px;color:var(--txt3);margin-bottom:18px">per report</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--txt2)">
+          <div style="display:flex;gap:8px"><span style="color:var(--grn)">✓</span>Bull/base/bear range</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--grn)">✓</span>Revenue multiple</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--grn)">✓</span>Investor readiness score</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--grn)">✓</span>DCF assumptions</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--grn)">✓</span>Valuation enhancers</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--grn)">✓</span>Pitch-ready summary</div>
+        </div>
+        <button class="btn btn-grn" style="width:100%;justify-content:center;margin-top:20px;padding:12px" onclick="goTo('form-valuation')">Start →</button>
+      </div>
+      <div style="background:var(--bg);border:1px solid rgba(245,166,35,.2);border-radius:16px;padding:28px;text-align:left">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1.5px;margin-bottom:10px">MARKETING</div>
+        <div style="font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:3px">$99</div>
+        <div style="font-size:12px;color:var(--txt3);margin-bottom:18px">per report</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--txt2)">
+          <div style="display:flex;gap:8px"><span style="color:var(--amb)">✓</span>Website analysis</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--amb)">✓</span>SEO audit</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--amb)">✓</span>Messaging review</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--amb)">✓</span>Social media audit</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--amb)">✓</span>Conversion gaps</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--amb)">✓</span>Growth recommendations</div>
+        </div>
+        <button class="btn btn-amb" style="width:100%;justify-content:center;margin-top:20px;padding:12px" onclick="goTo('form-marketing')">Start →</button>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(123,92,246,.06));border:1px solid rgba(79,142,247,.3);border-radius:16px;padding:28px;text-align:left;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(79,142,247,.15),transparent 70%);pointer-events:none"></div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);letter-spacing:1.5px;margin-bottom:6px">BUNDLE</div>
+        <div style="display:inline-block;background:linear-gradient(135deg,#A78BFA,#7B5CF6);font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;color:#fff;font-family:'JetBrains Mono',monospace;letter-spacing:.5px;margin-bottom:8px">SAVE $78</div>
+        <div style="font-size:34px;font-weight:900;color:#fff;letter-spacing:-1.5px;margin-bottom:3px">$349</div>
+        <div style="font-size:12px;color:var(--txt3);margin-bottom:18px">all 3 modules</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--txt2)">
+          <div style="display:flex;gap:8px"><span style="color:var(--pur)">✓</span>Strategy diagnosis</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--pur)">✓</span>Investor valuation</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--pur)">✓</span>Marketing audit</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--pur)">✓</span>One unified report</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--pur)">✓</span>Board-ready PDF</div>
+          <div style="display:flex;gap:8px"><span style="color:var(--pur)">✓</span>Priority processing</div>
+        </div>
+        <button class="btn btn-blue" style="width:100%;justify-content:center;margin-top:20px;padding:12px;background:linear-gradient(135deg,#A78BFA,#7B5CF6)" onclick="goTo('form-bundle')">Get Bundle →</button>
+      </div>
+    </div>
   </div>
-  <div class="pricing-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
-
-    <!-- FREE -->
-    <div class="pricing-card">
-      <div class="pricing-name">Free</div>
-      <div class="pricing-price">$0</div>
-      <div class="pricing-per">forever · no card needed</div>
-      <div class="pricing-features">
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Business health score (0–100)</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Top 3 problems identified</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>1 analysis per month</div>
-        <div class="pricing-feat"><span style="color:var(--txt3)">✗</span><span style="color:var(--txt3)">Full strategy report</span></div>
-        <div class="pricing-feat"><span style="color:var(--txt3)">✗</span><span style="color:var(--txt3)">PDF export</span></div>
-        <div class="pricing-feat"><span style="color:var(--txt3)">✗</span><span style="color:var(--txt3)">Benchmarking</span></div>
-      </div>
-      <button class="btn-ghost" style="width:100%;padding:12px" onclick="goTo('form')">Get started free</button>
-    </div>
-
-    <!-- PRO -->
-    <div class="pricing-card featured">
-      <div class="pricing-badge">MOST POPULAR</div>
-      <div class="pricing-name">Pro</div>
-      <div class="pricing-price">$149</div>
-      <div class="pricing-per">per month · cancel anytime</div>
-      <div class="pricing-features">
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>3 full analyses per month</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>McKinsey-grade strategy report</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Global peer benchmarking</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Board-ready PDF export</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>90-day action plan</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Root cause analysis</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Financial document upload</div>
-      </div>
-      <button class="btn-glow" style="width:100%;justify-content:center;font-size:14px;padding:13px" onclick="goTo('form')">Start Pro →</button>
-    </div>
-
-    <!-- EXCLUSIVE -->
-    <div class="pricing-card" style="border-color:rgba(167,139,250,.35);background:rgba(167,139,250,.04);position:relative;overflow:hidden">
-      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(167,139,250,.12),transparent 70%);pointer-events:none"></div>
-      <div style="display:inline-block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:20px;padding:3px 12px;margin-bottom:14px;letter-spacing:1px;font-weight:700">EXCLUSIVE</div>
-      <div class="pricing-name">Exclusive</div>
-      <div class="pricing-price" style="background:linear-gradient(135deg,#A78BFA,#7B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent">$499</div>
-      <div class="pricing-per">per month · dedicated support</div>
-      <div class="pricing-features">
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Everything in Pro</div>
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Unlimited analyses</div>
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>2× monthly expert strategy sessions</div>
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Live review of your AI report with expert</div>
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Custom industry deep-dive</div>
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Priority Slack/email support</div>
-        <div class="pricing-feat"><span class="pricing-feat-check" style="color:var(--pur)">✓</span>Quarterly strategic roadmap review</div>
-      </div>
-      <button class="btn-glow" style="width:100%;justify-content:center;font-size:14px;padding:13px;background:linear-gradient(135deg,#A78BFA,#7B5CF6)" onclick="goTo('form')">Apply for Exclusive →</button>
-    </div>
-
-    <!-- ENTERPRISE -->
-    <div class="pricing-card">
-      <div class="pricing-name">Enterprise</div>
-      <div class="pricing-price">Custom</div>
-      <div class="pricing-per">annual contract · team access</div>
-      <div class="pricing-features">
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Everything in Exclusive</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Team workspace (up to 20 users)</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Custom industry benchmarks</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>White-label PDF reports</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>API access + integrations</div>
-        <div class="pricing-feat"><span class="pricing-feat-check">✓</span>Dedicated strategy consultant</div>
-      </div>
-      <button class="btn-ghost" style="width:100%;padding:12px">Contact sales</button>
-    </div>
-
-  </div>
-</div>
+</section>
 
 <!-- CTA -->
-<div class="cta-section">
-  <div style="position:relative;max-width:640px;margin:0 auto">
-    <h2 class="cta-h">Your competitors<br>already know.<br><span class="grad">Do you?</span></h2>
-    <p style="font-size:17px;color:var(--txt2);margin-bottom:36px;line-height:1.7">Get your complete business diagnosis in under 90 seconds. Free to start.</p>
-    <button class="btn-glow" style="font-size:17px;padding:18px 42px" onclick="goTo('form')">
-      Run Analysis Now — It's Free →
-    </button>
-    <div style="margin-top:16px;font-size:12px;color:var(--txt3);font-family:'JetBrains Mono',monospace">No credit card · No signup required · 90 seconds</div>
+<section style="padding:96px 40px;text-align:center;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(79,142,247,.08),transparent 70%);pointer-events:none"></div>
+  <div style="position:relative;max-width:580px;margin:0 auto">
+    <h2 style="font-size:clamp(32px,6vw,68px);font-weight:900;letter-spacing:-2px;color:#fff;line-height:.98;margin-bottom:18px">Your competitors<br>already know.<br><span style="background:linear-gradient(135deg,#4F8EF7,#A78BFA);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Do you?</span></h2>
+    <p style="font-size:16px;color:var(--txt2);margin-bottom:32px;line-height:1.7">Get your AI analysis in under 90 seconds.</p>
+    <button class="btn btn-blue" style="font-size:16px;padding:16px 40px" onclick="document.getElementById('modules').scrollIntoView({behavior:'smooth'})">Choose Your Analysis →</button>
+    <div style="margin-top:14px;font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace">NO SUBSCRIPTION · PAY PER REPORT · 90 SECONDS</div>
   </div>
-</div>
+</section>
 
-<footer>
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="logo-mark" style="width:24px;height:24px;font-size:10px">O</div>
-    <span style="font-weight:700;font-size:14px;letter-spacing:-0.3px">Orxion AI</span>
+<footer style="border-top:1px solid var(--bdr);padding:20px 40px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2)">
+  <div style="display:flex;align-items:center;gap:8px">
+    <svg width="20" height="20" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lgf" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgf)"/><circle cx="40" cy="40" r="14" fill="none" stroke="white" stroke-width="2" opacity=".8"/><circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.5" opacity=".6"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/></svg>
+    <span style="font-weight:800;font-size:14px;color:#fff">Orxion AI</span>
   </div>
-  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:1px">BUSINESS DIAGNOSIS ENGINE · 2025</div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txt3);letter-spacing:1px">BUSINESS INTELLIGENCE PLATFORM · 2025</span>
 </footer>
 </div>
 
-<!-- FORM -->
-<div id="page-form" class="page">
+<!-- ═══ FORM — STRATEGY ════════════════════════════════════ -->
+<div id="page-form-strategy" class="page">
 <nav class="nav">
-  <div class="logo-svg">
-    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
-      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
-      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
-      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
-      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
-      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-    </svg>
-  </div>
-  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div class="logo-svg"><svg width="28" height="28" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg1)"/><circle cx="40" cy="40" r="16" fill="none" stroke="white" stroke-width="2" opacity=".85"/><circle cx="40" cy="40" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".65"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/><line x1="9" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="64" y1="40" x2="71" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/></svg></div>
+  <span class="logo-text">Orxion AI</span>
+  <div style="margin-left:4px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);background:rgba(79,142,247,.1);padding:3px 9px;border-radius:4px;letter-spacing:1px">STRATEGY</div>
   <div style="flex:1"></div>
   <button class="btn-ghost" onclick="goTo('land')">← Back</button>
 </nav>
-<div class="form-wrap">
-<div class="form-inner">
-  <div class="form-header fu">
-    <span class="form-tag">Business Diagnosis</span>
-    <div class="form-h1">Tell us about your business</div>
-    <p class="form-sub">Required: name, industry, stage. More data = more precise diagnosis. Takes under 3 minutes.</p>
+<div style="background:var(--bg2);min-height:calc(100vh - 60px)">
+<div style="max-width:640px;margin:0 auto;padding:48px 24px 88px">
+  <div class="fu" style="margin-bottom:32px">
+    <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Strategy · $199/report</div>
+    <h1 style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:8px">Business Diagnosis</h1>
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7">Full McKinsey-grade analysis: health score, root causes, strategic pillars, benchmarking, and 90-day action plan.</p>
   </div>
-  <div id="form-error" class="form-error"></div>
+  <div id="err-strategy" class="form-err"></div>
   <div class="form-card fu d1">
-
-    <!-- 00 — FINANCIAL STATEMENT TOGGLE -->
-    <div style="margin-bottom:28px;padding:18px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.2);border-radius:12px">
-      <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px">Do you have financial statements?</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:14px">Upload your P&L or annual report for a deeper, more precise diagnosis.</div>
-      <div style="display:flex;gap:10px;margin-bottom:0" id="stmt-toggle">
-        <button id="btn-has-stmt" onclick="setStmt(true)" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(79,142,247,.4);background:rgba(79,142,247,.15);color:var(--blue2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">
-          Yes, I have statements
-        </button>
-        <button id="btn-no-stmt" onclick="setStmt(false)" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s">
-          No, I'll enter manually
-        </button>
+    <!-- Statement toggle -->
+    <div style="margin-bottom:24px;padding:16px;background:rgba(79,142,247,.06);border:1px solid rgba(79,142,247,.18);border-radius:11px">
+      <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">Do you have financial statements?</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Upload P&L or annual report for deeper analysis.</div>
+      <div style="display:flex;gap:9px">
+        <button id="s-has-y" onclick="setStmt('s',true)" style="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(79,142,247,.4);background:rgba(79,142,247,.12);color:var(--blue2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">Yes, upload statements</button>
+        <button id="s-has-n" onclick="setStmt('s',false)" style="flex:1;padding:9px;border-radius:8px;border:1px solid var(--bdr);background:transparent;color:var(--txt2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s">No, enter manually</button>
       </div>
-      <!-- Upload zone — shown when has statements -->
-      <div id="stmt-upload-zone" style="display:none;margin-top:12px">
-        <div id="upload-zone" onclick="document.getElementById('f-file').click()"
-          style="border:1px dashed rgba(79,142,247,.3);border-radius:9px;padding:22px 20px;text-align:center;cursor:pointer;background:rgba(79,142,247,.04);transition:all .2s"
-          onmouseenter="this.style.borderColor='var(--blue)';this.style.background='rgba(79,142,247,.08)'"
-          onmouseleave="this.style.borderColor='rgba(79,142,247,.3)';this.style.background='rgba(79,142,247,.04)'">
-          <input type="file" id="f-file" accept=".pdf" style="display:none" onchange="handleFile(this)">
-          <div id="upload-icon" style="font-size:22px;margin-bottom:6px">📄</div>
-          <div id="upload-label" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--txt3)">Upload PDF · P&L, annual report, financial statements</div>
+      <div id="s-upload" style="display:none;margin-top:11px">
+        <div onclick="document.getElementById('s-file').click()" id="s-dropzone" style="border:1px dashed rgba(79,142,247,.3);border-radius:9px;padding:20px;text-align:center;cursor:pointer;transition:all .2s" onmouseenter="this.style.borderColor='var(--blue)';this.style.background='rgba(79,142,247,.06)'" onmouseleave="this.style.borderColor='rgba(79,142,247,.3)';this.style.background='transparent'">
+          <input type="file" id="s-file" accept=".pdf" style="display:none" onchange="handleUpload('s',this)">
+          <div id="s-file-icon" style="font-size:20px;margin-bottom:5px">📄</div>
+          <div id="s-file-lbl" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--txt3)">Click to upload PDF</div>
         </div>
       </div>
     </div>
+    <!-- Company -->
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:var(--g1)">1</span><span class="sec-ttl">Company Profile</span></div>
+      <div style="margin-bottom:11px"><label class="flbl">Business Name<span class="freq">*</span></label><input class="fi" id="s-name" placeholder="e.g. Acme Analytics"></div>
+      <div class="g2">
+        <div><label class="flbl">Industry<span class="freq">*</span></label><select class="fi fi-sel" id="s-industry"><option value="">Select…</option><option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option><option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option><option>Professional Services</option><option>Education</option><option>Media</option><option>Logistics</option><option>Other</option></select></div>
+        <div><label class="flbl">Stage<span class="freq">*</span></label><select class="fi fi-sel" id="s-stage"><option value="">Select…</option><option>Pre-revenue</option><option>Early Stage</option><option>Growth</option><option>Scale-up</option><option>Established</option></select></div>
+      </div>
+    </div>
+    <!-- Financials (hidden if has stmt) -->
+    <div id="s-manual" style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:var(--g1)">2</span><span class="sec-ttl">Financial Metrics</span></div>
+      <div class="g2" style="margin-bottom:11px">
+        <div><label class="flbl">Monthly Revenue ($)</label><input class="fi" type="number" id="s-rev" placeholder="0"></div>
+        <div><label class="flbl">Monthly Costs ($)</label><input class="fi" type="number" id="s-costs" placeholder="0"></div>
+      </div>
+      <div class="g3" style="margin-bottom:11px">
+        <div><label class="flbl">CAC ($)</label><input class="fi" type="number" id="s-cac" placeholder="—"></div>
+        <div><label class="flbl">LTV ($)</label><input class="fi" type="number" id="s-ltv" placeholder="—"></div>
+        <div><label class="flbl">Conversion %</label><input class="fi" type="number" id="s-conv" placeholder="—"></div>
+      </div>
+      <div style="max-width:50%"><label class="flbl">Team Size</label><input class="fi" type="number" id="s-team" placeholder="—"></div>
+    </div>
+    <!-- Channels -->
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:var(--g1)" id="s-ch-num">3</span><span class="sec-ttl">Marketing Channels</span></div>
+      <label class="flbl" style="margin-bottom:8px">Active Channels</label>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px" id="s-channels"></div>
+      <div><label class="flbl">Website URL</label><input class="fi" id="s-web" placeholder="https://…"></div>
+    </div>
+    <button class="btn-submit" style="background:var(--g1)" onclick="runStrategy()">Run Strategy Analysis →</button>
+    <p style="text-align:center;margin-top:9px;font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace">COMPLETES IN 60–90 SECONDS</p>
+  </div>
+</div>
+</div>
+</div>
 
-    <!-- 01 — Company Profile -->
-    <div style="margin-bottom:28px">
-      <div class="sec-hdr"><span class="sec-num">1</span><span class="sec-title">Company Profile</span></div>
-      <div style="margin-bottom:12px">
-        <label class="field-lbl">Business Name<span class="field-req">*</span></label>
-        <input class="fi" id="f-name" placeholder="e.g. Acme Analytics">
+<!-- ═══ FORM — VALUATION ═══════════════════════════════════ -->
+<div id="page-form-valuation" class="page">
+<nav class="nav">
+  <div class="logo-svg"><svg width="28" height="28" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg2)"/><circle cx="40" cy="40" r="16" fill="none" stroke="white" stroke-width="2" opacity=".85"/><circle cx="40" cy="40" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".65"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/><line x1="9" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="64" y1="40" x2="71" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/></svg></div>
+  <span class="logo-text">Orxion AI</span>
+  <div style="margin-left:4px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);background:rgba(34,212,122,.1);padding:3px 9px;border-radius:4px;letter-spacing:1px">VALUATION</div>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="goTo('land')">← Back</button>
+</nav>
+<div style="background:var(--bg2);min-height:calc(100vh - 60px)">
+<div style="max-width:640px;margin:0 auto;padding:48px 24px 88px">
+  <div class="fu" style="margin-bottom:32px">
+    <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Valuation · $129/report</div>
+    <h1 style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:8px">Investor Valuation</h1>
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7">Bull/base/bear valuation range, revenue multiples, investor readiness score, and pitch-ready summary.</p>
+  </div>
+  <div id="err-valuation" class="form-err"></div>
+  <div class="form-card fu d1">
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:linear-gradient(135deg,#22D47A,#1DB965)">1</span><span class="sec-ttl">Company Info</span></div>
+      <div style="margin-bottom:11px"><label class="flbl">Business Name<span class="freq">*</span></label><input class="fi" id="v-name" placeholder="e.g. Acme Analytics"></div>
+      <div class="g2">
+        <div><label class="flbl">Industry<span class="freq">*</span></label><select class="fi fi-sel" id="v-industry"><option value="">Select…</option><option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option><option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option><option>Professional Services</option><option>Education</option><option>Media</option><option>Logistics</option><option>Other</option></select></div>
+        <div><label class="flbl">Stage<span class="freq">*</span></label><select class="fi fi-sel" id="v-stage"><option value="">Select…</option><option>Pre-revenue</option><option>Early Stage</option><option>Growth</option><option>Scale-up</option><option>Established</option></select></div>
+      </div>
+    </div>
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:linear-gradient(135deg,#22D47A,#1DB965)">2</span><span class="sec-ttl">Financial Data</span></div>
+      <div class="g2" style="margin-bottom:11px">
+        <div><label class="flbl">Annual Revenue ($)<span class="freq">*</span></label><input class="fi" type="number" id="v-rev" placeholder="e.g. 1200000"></div>
+        <div><label class="flbl">Annual Costs ($)</label><input class="fi" type="number" id="v-costs" placeholder="e.g. 900000"></div>
+      </div>
+      <div class="g3" style="margin-bottom:11px">
+        <div><label class="flbl">Gross Margin %</label><input class="fi" type="number" id="v-margin" placeholder="e.g. 65"></div>
+        <div><label class="flbl">Growth Rate % YoY</label><input class="fi" type="number" id="v-growth" placeholder="e.g. 40"></div>
+        <div><label class="flbl">Churn % (SaaS)</label><input class="fi" type="number" id="v-churn" placeholder="e.g. 2"></div>
       </div>
       <div class="g2">
-        <div>
-          <label class="field-lbl">Industry<span class="field-req">*</span></label>
-          <select class="fi fi-sel" id="f-industry">
-            <option value="">Select…</option>
-            <option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option>
-            <option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option>
-            <option>Professional Services</option><option>Education</option><option>Media</option>
-            <option>Logistics</option><option>Other</option>
-          </select>
-        </div>
-        <div>
-          <label class="field-lbl">Growth Stage<span class="field-req">*</span></label>
-          <select class="fi fi-sel" id="f-stage">
-            <option value="">Select…</option>
-            <option>Pre-revenue</option><option>Early Stage</option><option>Growth</option>
-            <option>Scale-up</option><option>Established</option>
-          </select>
-        </div>
+        <div><label class="flbl">Total Funding Raised ($)</label><input class="fi" type="number" id="v-funding" placeholder="0"></div>
+        <div><label class="flbl">Team Size</label><input class="fi" type="number" id="v-team" placeholder="—"></div>
       </div>
     </div>
-
-    <!-- 02 — Financial Metrics (hidden if has statements) -->
-    <div id="manual-financials" style="margin-bottom:28px">
-      <div class="sec-hdr"><span class="sec-num">2</span><span class="sec-title">Financial Metrics</span></div>
-      <div class="g2" style="margin-bottom:12px">
-        <div><label class="field-lbl">Monthly Revenue ($)</label><input class="fi" type="number" id="f-rev" placeholder="0"></div>
-        <div><label class="field-lbl">Monthly Costs ($)</label><input class="fi" type="number" id="f-costs" placeholder="0"></div>
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:linear-gradient(135deg,#22D47A,#1DB965)">3</span><span class="sec-ttl">Investor Context</span></div>
+      <div style="margin-bottom:11px">
+        <label class="flbl">Purpose of Valuation</label>
+        <select class="fi fi-sel" id="v-purpose">
+          <option value="">Select…</option>
+          <option>Series A / Seed fundraising</option>
+          <option>M&A / acquisition</option>
+          <option>Shareholder buyout</option>
+          <option>General understanding</option>
+          <option>IPO preparation</option>
+        </select>
       </div>
-      <div class="g3" style="margin-bottom:12px">
-        <div><label class="field-lbl">CAC ($)</label><input class="fi" type="number" id="f-cac" placeholder="—"></div>
-        <div><label class="field-lbl">LTV ($)</label><input class="fi" type="number" id="f-ltv" placeholder="—"></div>
-        <div><label class="field-lbl">Conversion %</label><input class="fi" type="number" id="f-conv" placeholder="—"></div>
-      </div>
-      <div style="max-width:50%"><label class="field-lbl">Team Size</label><input class="fi" type="number" id="f-team" placeholder="—"></div>
+      <div><label class="flbl">Comparable Companies (optional)</label><input class="fi" id="v-comps" placeholder="e.g. Stripe, Shopify, similar startups"></div>
     </div>
-
-    <!-- 03 — Channels -->
-    <div style="margin-bottom:28px">
-      <div class="sec-hdr"><span class="sec-num" id="ch-sec-num">3</span><span class="sec-title">Marketing Channels</span></div>
-      <label class="field-lbl" style="margin-bottom:9px">Active Channels</label>
-      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px" id="channels-wrap"></div>
-      <div><label class="field-lbl">Website URL</label><input class="fi" id="f-web" placeholder="https://…"></div>
-    </div>
-
-    <button class="btn-submit" onclick="runAnalysis()">
-      Run Strategic Analysis →
-    </button>
-    <p style="text-align:center;margin-top:10px;font-size:11px;color:var(--txt3);font-family:'JetBrains Mono',monospace;letter-spacing:.5px">COMPLETES IN 60–90 SECONDS · POWERED BY CLAUDE AI</p>
+    <button class="btn-submit" style="background:linear-gradient(135deg,#22D47A,#1DB965)" onclick="runValuation()">Run Valuation Analysis →</button>
+    <p style="text-align:center;margin-top:9px;font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace">COMPLETES IN 60–90 SECONDS</p>
   </div>
 </div>
 </div>
 </div>
 
-<!-- LOADING -->
+<!-- ═══ FORM — MARKETING ═══════════════════════════════════ -->
+<div id="page-form-marketing" class="page">
+<nav class="nav">
+  <div class="logo-svg"><svg width="28" height="28" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lg3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F5A623"/><stop offset="100%" stop-color="#FF5B5B"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg3)"/><circle cx="40" cy="40" r="16" fill="none" stroke="white" stroke-width="2" opacity=".85"/><circle cx="40" cy="40" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".65"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/><line x1="9" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="64" y1="40" x2="71" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/></svg></div>
+  <span class="logo-text">Orxion AI</span>
+  <div style="margin-left:4px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);background:rgba(245,166,35,.1);padding:3px 9px;border-radius:4px;letter-spacing:1px">MARKETING</div>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="goTo('land')">← Back</button>
+</nav>
+<div style="background:var(--bg2);min-height:calc(100vh - 60px)">
+<div style="max-width:640px;margin:0 auto;padding:48px 24px 88px">
+  <div class="fu" style="margin-bottom:32px">
+    <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Marketing · $99/report</div>
+    <h1 style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:8px">Marketing Audit</h1>
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7">Website, SEO, messaging, and social media analysis. Conversion gaps, growth opportunities, competitor positioning.</p>
+  </div>
+  <div id="err-marketing" class="form-err"></div>
+  <div class="form-card fu d1">
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:var(--g3)">1</span><span class="sec-ttl">Company Info</span></div>
+      <div style="margin-bottom:11px"><label class="flbl">Business Name<span class="freq">*</span></label><input class="fi" id="m-name" placeholder="e.g. Acme Analytics"></div>
+      <div class="g2">
+        <div><label class="flbl">Industry<span class="freq">*</span></label><select class="fi fi-sel" id="m-industry"><option value="">Select…</option><option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option><option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option><option>Professional Services</option><option>Education</option><option>Media</option><option>Logistics</option><option>Other</option></select></div>
+        <div><label class="flbl">Target Market</label><input class="fi" id="m-target" placeholder="e.g. SMBs in Europe"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:var(--g3)">2</span><span class="sec-ttl">Digital Presence</span></div>
+      <div style="margin-bottom:11px"><label class="flbl">Website URL<span class="freq">*</span></label><input class="fi" id="m-url" placeholder="https://yoursite.com"></div>
+      <div class="g2" style="margin-bottom:11px">
+        <div><label class="flbl">Instagram</label><input class="fi" id="m-ig" placeholder="@handle or URL"></div>
+        <div><label class="flbl">LinkedIn</label><input class="fi" id="m-li" placeholder="Company page URL"></div>
+      </div>
+      <div class="g2">
+        <div><label class="flbl">Facebook</label><input class="fi" id="m-fb" placeholder="Page URL"></div>
+        <div><label class="flbl">Other (TikTok, X, etc.)</label><input class="fi" id="m-other" placeholder="URL or handle"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:var(--g3)">3</span><span class="sec-ttl">Context</span></div>
+      <div style="margin-bottom:11px">
+        <label class="flbl">Main goal of this audit</label>
+        <select class="fi fi-sel" id="m-goal">
+          <option value="">Select…</option>
+          <option>Increase website conversions</option>
+          <option>Grow social media presence</option>
+          <option>Improve SEO ranking</option>
+          <option>Reposition brand messaging</option>
+          <option>Launch new product/market</option>
+          <option>Full marketing review</option>
+        </select>
+      </div>
+      <div style="margin-bottom:11px"><label class="flbl">Top 3 Competitors (optional)</label><input class="fi" id="m-comps" placeholder="e.g. Competitor A, B, C"></div>
+      <!-- Screenshot upload -->
+      <div>
+        <label class="flbl" style="margin-bottom:8px">Screenshot Upload (optional)</label>
+        <div onclick="document.getElementById('m-file').click()" style="border:1px dashed rgba(245,166,35,.3);border-radius:9px;padding:18px;text-align:center;cursor:pointer;transition:all .2s" onmouseenter="this.style.borderColor='var(--amb)';this.style.background='rgba(245,166,35,.05)'" onmouseleave="this.style.borderColor='rgba(245,166,35,.3)';this.style.background='transparent'">
+          <input type="file" id="m-file" accept="image/*,.pdf" style="display:none" onchange="handleUpload('m',this)">
+          <div id="m-file-icon" style="font-size:20px;margin-bottom:5px">🖼️</div>
+          <div id="m-file-lbl" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--txt3)">Upload screenshot of your website or social media</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-submit" style="background:var(--g3)" onclick="runMarketing()">Run Marketing Audit →</button>
+    <p style="text-align:center;margin-top:9px;font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace">COMPLETES IN 60–90 SECONDS</p>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══ FORM — BUNDLE ══════════════════════════════════════ -->
+<div id="page-form-bundle" class="page">
+<nav class="nav">
+  <div class="logo-svg"><svg width="28" height="28" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lg4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg4)"/><circle cx="40" cy="40" r="16" fill="none" stroke="white" stroke-width="2" opacity=".85"/><circle cx="40" cy="40" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".65"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/><line x1="9" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/><line x1="64" y1="40" x2="71" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/></svg></div>
+  <span class="logo-text">Orxion AI</span>
+  <div style="margin-left:4px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);background:rgba(167,139,250,.1);padding:3px 9px;border-radius:4px;letter-spacing:1px">BUNDLE</div>
+  <div style="flex:1"></div>
+  <button class="btn-ghost" onclick="goTo('land')">← Back</button>
+</nav>
+<div style="background:var(--bg2);min-height:calc(100vh - 60px)">
+<div style="max-width:640px;margin:0 auto;padding:48px 24px 88px">
+  <div class="fu" style="margin-bottom:32px">
+    <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--pur);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">Bundle · $349 (save $78)</div>
+    <h1 style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:8px">Complete Business Intelligence</h1>
+    <p style="font-size:14px;color:var(--txt2);line-height:1.7">All three modules in one unified report: Strategy + Valuation + Marketing.</p>
+  </div>
+  <div id="err-bundle" class="form-err"></div>
+  <div class="form-card fu d1">
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:linear-gradient(135deg,#A78BFA,#7B5CF6)">1</span><span class="sec-ttl">Company Info</span></div>
+      <div style="margin-bottom:11px"><label class="flbl">Business Name<span class="freq">*</span></label><input class="fi" id="b-name" placeholder="e.g. Acme Analytics"></div>
+      <div class="g2" style="margin-bottom:11px">
+        <div><label class="flbl">Industry<span class="freq">*</span></label><select class="fi fi-sel" id="b-industry"><option value="">Select…</option><option>Technology / SaaS</option><option>E-commerce</option><option>Financial Services</option><option>Healthcare</option><option>Real Estate</option><option>Manufacturing</option><option>Professional Services</option><option>Education</option><option>Media</option><option>Logistics</option><option>Other</option></select></div>
+        <div><label class="flbl">Stage<span class="freq">*</span></label><select class="fi fi-sel" id="b-stage"><option value="">Select…</option><option>Pre-revenue</option><option>Early Stage</option><option>Growth</option><option>Scale-up</option><option>Established</option></select></div>
+      </div>
+      <div class="g2">
+        <div><label class="flbl">Website URL</label><input class="fi" id="b-web" placeholder="https://…"></div>
+        <div><label class="flbl">Team Size</label><input class="fi" type="number" id="b-team" placeholder="—"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:linear-gradient(135deg,#A78BFA,#7B5CF6)">2</span><span class="sec-ttl">Financials</span></div>
+      <div class="g2" style="margin-bottom:11px">
+        <div><label class="flbl">Annual Revenue ($)</label><input class="fi" type="number" id="b-rev" placeholder="0"></div>
+        <div><label class="flbl">Annual Costs ($)</label><input class="fi" type="number" id="b-costs" placeholder="0"></div>
+      </div>
+      <div class="g3">
+        <div><label class="flbl">Gross Margin %</label><input class="fi" type="number" id="b-margin" placeholder="—"></div>
+        <div><label class="flbl">Growth % YoY</label><input class="fi" type="number" id="b-growth" placeholder="—"></div>
+        <div><label class="flbl">Churn %</label><input class="fi" type="number" id="b-churn" placeholder="—"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:22px">
+      <div class="sec-hdr"><span class="sec-num" style="background:linear-gradient(135deg,#A78BFA,#7B5CF6)">3</span><span class="sec-ttl">Marketing & Context</span></div>
+      <div class="g2" style="margin-bottom:11px">
+        <div><label class="flbl">Instagram</label><input class="fi" id="b-ig" placeholder="@handle"></div>
+        <div><label class="flbl">LinkedIn</label><input class="fi" id="b-li" placeholder="Page URL"></div>
+      </div>
+      <div><label class="flbl">Investor Purpose (if any)</label><select class="fi fi-sel" id="b-purpose"><option value="General">General understanding</option><option>Series A / Seed fundraising</option><option>M&A / acquisition</option><option>Shareholder buyout</option><option>IPO preparation</option></select></div>
+    </div>
+    <button class="btn-submit" style="background:linear-gradient(135deg,#A78BFA,#7B5CF6)" onclick="runBundle()">Run Complete Analysis →</button>
+    <p style="text-align:center;margin-top:9px;font-size:10px;color:var(--txt3);font-family:'JetBrains Mono',monospace">ALL 3 MODULES · 90–120 SECONDS</p>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ═══ LOADING ════════════════════════════════════════════ -->
 <div id="page-load" class="page">
 <nav class="nav">
-  <div class="logo-svg">
-    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
-      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
-      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
-      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
-      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
-      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-    </svg>
-  </div>
-  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div class="logo-svg"><svg width="28" height="28" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lg5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg5)"/><circle cx="40" cy="40" r="16" fill="none" stroke="white" stroke-width="2" opacity=".85"/><circle cx="40" cy="40" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".65"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/></svg></div>
+  <span class="logo-text">Orxion AI</span>
   <div style="flex:1"></div>
-  <div class="nav-badge"><span class="live-dot"></span>ANALYZING</div>
+  <div class="nav-pill"><span class="live-dot"></span>ANALYZING</div>
 </nav>
 <div class="load-wrap">
-  <div class="load-rings">
-    <div class="ring ring1"></div>
-    <div class="ring ring2"></div>
-    <div class="ring ring3"></div>
-    <div class="ring-core"></div>
+  <div style="position:relative;width:96px;height:96px;margin-bottom:36px">
+    <div class="ring" style="inset:0;border-top-color:var(--blue);animation:spin 1.8s linear infinite"></div>
+    <div class="ring" style="inset:12px;border-top-color:var(--pur);animation:spin 2.4s linear infinite reverse"></div>
+    <div class="ring" style="inset:24px;border-top-color:var(--cyan);animation:spin 3s linear infinite"></div>
+    <div style="position:absolute;inset:36px;border-radius:50%;background:var(--blue);opacity:.25;animation:pulse 1.4s ease infinite"></div>
   </div>
-  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">ORXION AI · ANALYZING</div>
-  <div id="load-msg" style="font-size:17px;font-weight:600;color:var(--txt2);margin-bottom:4px">Processing…</div>
-  <div class="prog-bar">
-    <div class="prog-fill" id="prog-fill" style="width:0%"></div>
-    <div class="prog-shimmer"></div>
-  </div>
-  <div id="load-pct" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt3);margin-top:9px">0%</div>
+  <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:2px;margin-bottom:10px" id="load-module">ORXION AI · ANALYZING</div>
+  <div style="font-size:17px;font-weight:600;color:var(--txt2);margin-bottom:4px" id="load-msg">Processing…</div>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);margin-top:8px" id="load-pct">0%</div>
 </div>
 </div>
 
-<!-- REPORT -->
+<!-- ═══ REPORT ══════════════════════════════════════════════ -->
 <div id="page-rep" class="page">
 <nav class="nav">
-  <div class="logo-svg">
-    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs><linearGradient id="lgd" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs>
-      <rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lgd)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
-      <circle cx="40" cy="40" r="18" fill="none" stroke="white" stroke-width="1.8" opacity=".9"/>
-      <circle cx="40" cy="40" r="13" fill="none" stroke="white" stroke-width="1.5" opacity=".7"/>
-      <circle cx="40" cy="40" r="8" fill="none" stroke="white" stroke-width="1.3" opacity=".6"/>
-      <circle cx="40" cy="40" r="3" fill="white" opacity=".9"/>
-      <line x1="8" y1="40" x2="16" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="64" y1="40" x2="72" y2="40" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
-      <line x1="10" y1="36" x2="15" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="36" x2="70" y2="36" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="10" y1="44" x2="15" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-      <line x1="65" y1="44" x2="70" y2="44" stroke="white" stroke-width="1" stroke-linecap="round" opacity=".4"/>
-    </svg>
-  </div>
-  <div class="logo-text">Orx<span>ion</span> AI</div>
+  <div class="logo-svg"><svg width="28" height="28" viewBox="0 0 80 80" fill="none"><defs><linearGradient id="lg6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4F8EF7"/><stop offset="100%" stop-color="#7B5CF6"/></linearGradient></defs><rect x="40" y="4" width="51" height="51" rx="4" transform="rotate(45 40 4)" fill="url(#lg6)"/><circle cx="40" cy="40" r="16" fill="none" stroke="white" stroke-width="2" opacity=".85"/><circle cx="40" cy="40" r="9" fill="none" stroke="white" stroke-width="1.5" opacity=".65"/><circle cx="40" cy="40" r="3" fill="white" opacity=".9"/></svg></div>
+  <span class="logo-text">Orxion AI</span>
   <div style="flex:1"></div>
   <button class="btn-ghost" onclick="resetApp()">↺ New</button>
-  <button class="btn-glow" style="padding:9px 18px;font-size:12px" onclick="exportPDF()">↓ Export PDF</button>
+  <button class="btn btn-blue" style="margin-left:8px;font-size:12px;padding:9px 18px" onclick="exportPDF()">↓ PDF</button>
 </nav>
-<div class="rep-body">
-  <div class="rep-inner" id="report-body"></div>
+<div style="background:var(--bg2);min-height:calc(100vh - 60px)">
+  <div style="max-width:1000px;margin:0 auto;padding:28px 24px 80px" id="report-body"></div>
 </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const CHANNELS=['Organic Search','Paid Search','LinkedIn','Instagram','Facebook','Email','Content / SEO','Referral'];
-const TICKER=['REVENUE GROWTH +24%','LTV:CAC 4.2×','BURN RATE $42K/MO','GROSS MARGIN 68%','CHURN 2.1%','ARR $840K','PAYBACK 11 MO','NPS SCORE 54','CAC $120','PIPELINE $1.2M'];
-let appState={form:{},report:null,fdata:null,pct:0,loadInt:null,pctInt:null,hasStmt:false,pdfName:''};
-let selectedChannels=[];
-let charts={};
+const TICKER=['STRATEGY $199','VALUATION $129','MARKETING $99','BUNDLE $349','BIG 4 FRAMEWORKS','90 SECONDS','FREE TO PREVIEW'];
+let appState={module:'',report:null,fdata:null,pct:0,loadInt:null,hasStmt:{s:false,m:false}};
+let sCh=[],charts={};
 
-function goTo(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById('page-'+p).classList.add('active');window.scrollTo(0,0);if(p==='land'){initLandCharts();animateHero()}}
-function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
-function scHex(s){return s>=70?'#22D47A':s>=45?'#F5A623':'#FF5B5B'}
-function scLbl(s){return s>=70?'STRONG':s>=45?'AT RISK':'CRITICAL'}
+/* PAGES */
+function goTo(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  window.scrollTo(0,0);
+  if(p==='land')initTicker();
+}
 
 /* TICKER */
 function initTicker(){
-  const el=document.getElementById('ticker-el');
-  if(!el)return;
-  const items=[...TICKER,...TICKER,...TICKER];
-  el.innerHTML=items.map((t,i)=>`<span class="tick-item"><span class="tick-up">▸</span>${t}</span>`).join('');
+  const el=document.getElementById('ticker-el');if(!el)return;
+  const items=[...TICKER,...TICKER,...TICKER,...TICKER];
+  el.innerHTML=items.map(t=>`<span style="padding:0 28px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt3);letter-spacing:1.5px;display:inline-flex;align-items:center;gap:9px"><span style="color:var(--grn)">▸</span>${t}</span>`).join('');
 }
 
 /* CHANNELS */
 function initChannels(){
-  const w=document.getElementById('channels-wrap');
-  if(!w)return;
-  w.innerHTML=CHANNELS.map(ch=>`<button class="ch-pill${selectedChannels.includes(ch)?' on':''}" onclick="toggleCh('${ch}')">${ch}</button>`).join('');
+  const w=document.getElementById('s-channels');if(!w)return;
+  w.innerHTML=CHANNELS.map(ch=>`<button class="ch-pill${sCh.includes(ch)?' on':''}" onclick="togCh('${ch}')">${ch}</button>`).join('');
 }
-function toggleCh(ch){const i=selectedChannels.indexOf(ch);i>=0?selectedChannels.splice(i,1):selectedChannels.push(ch);initChannels()}
-
-/* ANIMATE HERO STATS */
-function animateCounter(el,target,suffix,duration){
-  let start=null,from=0;
-  function step(ts){
-    if(!start)start=ts;
-    const p=Math.min((ts-start)/duration,1);
-    const val=Math.round(from+(target-from)*p);
-    el.textContent=val+suffix;
-    if(p<1)requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-function animateHero(){
-  setTimeout(()=>{
-    const st=document.getElementById('stat-time');
-    const sd=document.getElementById('stat-dims');
-    if(st)animateCounter(st,90,'s',1200);
-    if(sd)animateCounter(sd,12,'',1000);
-    // Animate score ring
-    const arc=document.getElementById('hero-ring-arc');
-    const num=document.getElementById('hero-score-num');
-    if(arc&&num){
-      let score=0;
-      const target=74;
-      const total=163;
-      const int=setInterval(()=>{
-        score+=1;
-        const fill=(score/100)*total;
-        arc.setAttribute('stroke-dasharray',fill.toFixed(1)+' '+total);
-        num.textContent=score;
-        if(score>=target)clearInterval(int);
-      },18);
-    }
-  },400);
-}
-
-/* CHART COLORS */
-function gc(){return{grid:'rgba(255,255,255,.06)',text:'#4A5568'}}
-
-/* LAND CHARTS */
-function initLandCharts(){
-  setTimeout(()=>{
-    const {grid,text}=gc();
-    ['land-radar','land-rev','land-ch','hero-radar','hero-rev'].forEach(destroyChart);
-    const hr=document.getElementById('hero-radar');
-    if(hr)charts['hero-radar']=new Chart(hr,{type:'radar',data:{labels:['Gr','Ma','Re','Mk','Op'],datasets:[{data:[72,48,68,58,63],backgroundColor:'rgba(79,142,247,.12)',borderColor:'#4F8EF7',borderWidth:1.5,pointBackgroundColor:'#4F8EF7',pointRadius:2}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:8,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
-    const hl=document.getElementById('hero-rev');
-    if(hl)charts['hero-rev']=new Chart(hl,{type:'line',data:{labels:Array(12).fill(''),datasets:[{data:[42,45,48,44,52,58,56,62,60,68,72,74],borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.08)',borderWidth:2,tension:.4,fill:true,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{display:false},y:{display:false}},plugins:{legend:{display:false}}}});
-    const lr=document.getElementById('land-radar');
-    if(lr)charts['land-radar']=new Chart(lr,{type:'radar',data:{labels:['Growth','Margin','Retention','Marketing','Ops'],datasets:[{data:[72,48,68,58,63],backgroundColor:'rgba(79,142,247,.12)',borderColor:'#4F8EF7',borderWidth:2,pointBackgroundColor:'#4F8EF7',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:10,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
-    const lv=document.getElementById('land-rev');
-    if(lv)charts['land-rev']=new Chart(lv,{type:'line',data:{labels:['J','F','M','A','M','J','J','A','S','O','N','D'],datasets:[{data:[42,45,48,44,52,58,56,62,60,68,72,74],borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0,pointHoverRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'},callback:v=>'$'+v+'K'}}},plugins:{legend:{display:false}}}});
-    const lc=document.getElementById('land-ch');
-    if(lc)charts['land-ch']=new Chart(lc,{type:'bar',data:{labels:['SEO','Paid','LinkedIn','Social','Email'],datasets:[{data:[75,60,45,80,55],backgroundColor:['rgba(79,142,247,.6)','rgba(34,212,122,.6)','rgba(167,139,250,.6)','rgba(245,166,35,.6)','rgba(34,212,200,.6)'],borderColor:['#4F8EF7','#22D47A','#A78BFA','#F5A623','#22D4C8'],borderWidth:1,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}},max:100}},plugins:{legend:{display:false}}}});
-  },60);
-}
-
-/* REP CHARTS */
-function initRepCharts(r){
-  setTimeout(()=>{
-    const {grid,text}=gc();
-    ['rep-radar','rep-rev','rep-ch'].forEach(destroyChart);
-    const rr=document.getElementById('rep-radar');
-    if(rr&&r.radarLabels&&r.radarVals)charts['rep-radar']=new Chart(rr,{type:'radar',data:{labels:r.radarLabels,datasets:[{data:r.radarVals,backgroundColor:'rgba(79,142,247,.15)',borderColor:'#4F8EF7',borderWidth:2,pointBackgroundColor:'#4F8EF7',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:10,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
-    const rv=document.getElementById('rep-rev');
-    if(rv&&r.revenueHistory){
-      const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].slice(-r.revenueHistory.length);
-      charts['rep-rev']=new Chart(rv,{type:'line',data:{labels:months,datasets:[{data:r.revenueHistory,borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0,pointHoverRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'},callback:v=>'$'+v+'K'}}},plugins:{legend:{display:false}}}});
-    }
-    const rc=document.getElementById('rep-ch');
-    if(rc&&r.channelLabels&&r.channelVals)charts['rep-ch']=new Chart(rc,{type:'bar',data:{labels:r.channelLabels,datasets:[{data:r.channelVals,backgroundColor:['rgba(79,142,247,.6)','rgba(34,212,122,.6)','rgba(167,139,250,.6)','rgba(245,166,35,.6)','rgba(34,212,200,.6)'],borderColor:['#4F8EF7','#22D47A','#A78BFA','#F5A623','#22D4C8'],borderWidth:1,borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}},max:100}},plugins:{legend:{display:false}}}});
-  },80);
-}
-
-/* BUILD PROMPT */
-function buildPrompt(d){
-  return `You are a top-tier Big 4 strategy partner. Analyze this business rigorously. Output ONLY raw JSON starting with { and ending with }. No markdown, no backticks.
-
-COMPANY:${d.name||'N/A'} INDUSTRY:${d.industry||'N/A'} STAGE:${d.stage||'N/A'}
-REVENUE/mo:$${d.revenue||'?'} COSTS/mo:$${d.costs||'?'} CAC:$${d.cac||'?'} LTV:$${d.ltv||'?'}
-CONVERSION:${d.conv||'?'}% TEAM:${d.team||'?'} CHANNELS:${(d.channels||[]).join(',')||'none'} WEB:${d.website||'N/A'}
-
-Return exactly this JSON with real data-driven analysis:
-{"score":75,"summary":"One incisive sentence with actual numbers","metrics":{"Margin":"28%","LTV:CAC":"3.2x","Runway":"6 mo","Unit Econ":"Marginal"},"radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LinkedIn","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Problem 1 with specific data","Problem 2","Problem 3","Problem 4"],"rootCauses":["Root cause 1","Root cause 2","Root cause 3"],"pillars":[{"title":"Pillar 1","desc":"Two specific actionable sentences."},{"title":"Pillar 2","desc":"Two sentences."},{"title":"Pillar 3","desc":"Two sentences."}],"plan":{"d30":["Action 1","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"One bold concluding sentence."}`;
-}
-
-/* RUN ANALYSIS */
-async function runAnalysis(retryMode){
-  if(!retryMode){
-    const name=document.getElementById('f-name').value.trim();
-    const industry=document.getElementById('f-industry').value;
-    const stage=document.getElementById('f-stage').value;
-    if(!name||!industry||!stage){
-      const err=document.getElementById('form-error');
-      err.textContent='⚠ Required: Business name, Industry, and Stage.';
-      err.style.display='block';
-      return;
-    }
-    document.getElementById('form-error').style.display='none';
-    const hasStmt=appState.hasStmt;
-    appState.fdata={name,industry,stage,
-      revenue:hasStmt?'(see financial statements)':document.getElementById('f-rev').value,
-      costs:hasStmt?'(see financial statements)':document.getElementById('f-costs').value,
-      cac:hasStmt?'(see financial statements)':document.getElementById('f-cac').value,
-      ltv:hasStmt?'(see financial statements)':document.getElementById('f-ltv').value,
-      conv:hasStmt?'(see financial statements)':document.getElementById('f-conv').value,
-      team:document.getElementById('f-team')?document.getElementById('f-team').value:'?',
-      channels:[...selectedChannels],
-      website:document.getElementById('f-web').value,
-      hasStatements:hasStmt,
-      pdfName:appState.pdfName||''};
-  }
-  goTo('load');
-  appState.pct=0;
-  clearInterval(appState.loadInt);
-  clearInterval(appState.pctInt);
-
-  function upd(pct,msg){
-    const f=document.getElementById('prog-fill');
-    const p=document.getElementById('load-pct');
-    const m=document.getElementById('load-msg');
-    if(f)f.style.width=Math.min(100,Math.round(pct))+'%';
-    if(p)p.textContent=Math.min(100,Math.round(pct))+'%';
-    if(msg&&m)m.textContent=msg;
-  }
-  upd(0,'Parsing business profile…');
-  const msgs=['Running financial model…','Benchmarking vs sector…','Mapping root causes…','Building strategic options…','Compiling report…'];
-  let mi=0;
-  appState.loadInt=setInterval(()=>{
-    appState.pct=Math.min(appState.pct+(appState.pct<88?10+Math.random()*8:0.4+Math.random()*0.3),97);
-    const msg=appState.pct<88?msgs[Math.min(mi,msgs.length-1)]:'Waiting for AI response…';
-    upd(appState.pct,msg);mi++;
-  },900);
-
-  let apiData=null,fetchError=null;
-  try{
-    const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(appState.fdata)});
-    if(!res.ok){const t=await res.json().catch(()=>({}));fetchError=t.error||'API error '+res.status;}
-    else{const json=await res.json();apiData={content:[{type:'text',text:JSON.stringify(json.report)}]};}
-  }catch(e){fetchError='Network error: '+e.message}
-
-  clearInterval(appState.loadInt);clearInterval(appState.pctInt);
-  if(fetchError){
-    goTo('form');
-    const el=document.getElementById('form-error');
-    if(el){el.textContent='⚠ '+fetchError;el.style.display='block';}
-    return;
-  }
-
-  let report=null;
-  try{
-    const raw=(apiData.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').trim();
-    const s=raw.indexOf('{'),e2=raw.lastIndexOf('}');
-    if(s===-1||e2===-1)throw new Error('No JSON found');
-    report=JSON.parse(raw.slice(s,e2+1));
-    if(typeof report.score!=='number')report.score=parseInt(String(report.score))||50;
-  }catch(e){
-    goTo('form');
-    const el=document.getElementById('form-error');
-    if(el){el.textContent='⚠ Parse error: '+e.message;el.style.display='block';}
-    return;
-  }
-  appState.report=report;
-  upd(100,'Report ready!');
-  setTimeout(()=>{goTo('rep');requestAnimationFrame(()=>requestAnimationFrame(()=>{try{buildReportHTML()}catch(e){console.error(e)}}))},350);
-}
-
-/* BUILD REPORT HTML */
-function buildReportHTML(){
-  const r=appState.report,f=appState.fdata;
-  if(!r)return;
-  const sc=r.score,col=scHex(sc),lbl=scLbl(sc);
-  const ringC=2*Math.PI*48,ringF=(sc/100)*ringC;
-  const pillarCols=['#4F8EF7','#A78BFA','#22D47A'];
-  const phaseCols=[{l:'0–30 DAYS',items:r.plan?.d30,c:'#FF5B5B'},{l:'30–60 DAYS',items:r.plan?.d60,c:'#F5A623'},{l:'60–90 DAYS',items:r.plan?.d90,c:'#22D47A'}];
-  const ments=Object.entries(r.metrics||{});
-  const mCols=['#22D47A','#F5A623','#FF5B5B','#4F8EF7'];
-  const tags=[f.industry,f.stage,...(f.channels||[]).slice(0,2)].filter(Boolean);
-
-  document.getElementById('report-body').innerHTML=`
-  <div class="rep-cover" style="animation:fadeUp .6s ease both">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
-      <div>
-        <div class="rep-co">${f.name}</div>
-        <div class="rep-meta">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})} · DIAGNOSIS REPORT</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
-          ${tags.map(t=>`<span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);background:rgba(255,255,255,.05);border:1px solid var(--bdr);padding:2px 9px;border-radius:3px">${t}</span>`).join('')}
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:16px">
-        <svg width="110" height="110" viewBox="0 0 110 110">
-          <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="8"/>
-          <circle cx="55" cy="55" r="48" fill="none" stroke="${col}" stroke-width="8" stroke-dasharray="${ringF.toFixed(1)} ${ringC.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 55 55)"/>
-          <text x="55" y="51" text-anchor="middle" fill="${col}" font-size="24" font-weight="800" font-family="Inter,sans-serif">${sc}</text>
-          <text x="55" y="65" text-anchor="middle" fill="#4A5568" font-size="9" font-family="JetBrains Mono,monospace" letter-spacing="1">/100</text>
-          <text x="55" y="79" text-anchor="middle" fill="${col}" font-size="10" font-weight="700" font-family="Inter,sans-serif">${lbl}</text>
-        </svg>
-        <div style="max-width:320px">
-          <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">Executive Summary</div>
-          <blockquote style="font-size:15px;font-weight:600;color:#fff;border-left:3px solid var(--blue);padding-left:14px;line-height:1.55;margin-bottom:8px">"${r.summary}"</blockquote>
-          <p style="font-size:12px;color:var(--txt2);font-style:italic;line-height:1.6">${r.verdict||''}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="kpi-grid">
-    ${ments.map(([k,v],i)=>`
-    <div class="kpi" style="animation:fadeUp .5s ${.05+i*.07}s ease both">
-      <div class="kpi-lbl">${k}</div>
-      <div class="kpi-val" style="color:${mCols[i%4]}">${v}</div>
-    </div>`).join('')}
-  </div>
-
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
-    <div class="rep-card">
-      <div class="rep-card-title">Revenue Trajectory</div>
-      <div style="height:140px"><canvas id="rep-rev"></canvas></div>
-    </div>
-    <div class="rep-card">
-      <div class="rep-card-title">5-Dimension Assessment</div>
-      <canvas id="rep-radar" height="140"></canvas>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-    <div class="rep-card">
-      <div class="rep-card-title" style="--c:var(--red)">Key Problems</div>
-      ${r.problems?.map((p,i)=>`
-      <div class="finding">
-        <span class="badge badge-crit">${String(i+1).padStart(2,'0')}</span>
-        <span class="finding-txt">${p}</span>
-      </div>`).join('')||''}
-    </div>
-    <div class="rep-card">
-      <div class="rep-card-title">Channel Performance</div>
-      <div style="height:160px"><canvas id="rep-ch"></canvas></div>
-    </div>
-  </div>
-
-  <div class="rep-card" style="margin-bottom:14px">
-    <div class="rep-card-title">Root Causes</div>
-    ${r.rootCauses?.map((rc,i)=>`
-    <div class="root-box">
-      <div class="root-lbl">CAUSE ${String(i+1).padStart(2,'0')}</div>
-      <div class="root-txt">${rc}</div>
-    </div>`).join('')||''}
-  </div>
-
-  <div class="rep-card" style="margin-bottom:14px">
-    <div class="rep-card-title">Strategic Pillars</div>
-    ${r.pillars?.map((p,i)=>`
-    <div class="pillar" style="border-left-color:${pillarCols[i%3]}">
-      <div class="pillar-num" style="color:${pillarCols[i%3]}">PILLAR 0${i+1}</div>
-      <div class="pillar-title">${p.title}</div>
-      <div class="pillar-desc">${p.desc}</div>
-    </div>`).join('')||''}
-  </div>
-
-  <div class="rep-card" style="margin-bottom:14px">
-    <div class="rep-card-title">90-Day Execution Plan</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-      ${phaseCols.map(ph=>`
-      <div>
-        <div class="phase-hdr" style="color:${ph.c};border-bottom-color:${ph.c}30">${ph.l}</div>
-        ${ph.items?.map(a=>`<div class="phase-item"><span class="phase-arrow" style="color:${ph.c}">→</span>${a}</div>`).join('')||''}
-      </div>`).join('')}
-    </div>
-  </div>
-
-  <div style="background:linear-gradient(135deg,rgba(79,142,247,.1),rgba(123,92,246,.06));border:1px solid rgba(79,142,247,.2);border-radius:16px;padding:32px;text-align:center">
-    <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-0.5px">Ready to present?</div>
-    <p style="font-size:14px;color:var(--txt2);margin-bottom:22px">Export a board-ready PDF with full analysis, charts, and recommendations.</p>
-    <button class="btn-glow" style="font-size:14px;padding:14px 32px" onclick="exportPDF()">↓ Export PDF Report</button>
-  </div>`;
-  initRepCharts(r);
-}
-
-/* PDF EXPORT */
-function exportPDF(){
-  const r=appState.report,f=appState.fdata;if(!r)return;
-  const col=scHex(r.score);
-  const phs=[{l:'0–30 Days',items:r.plan?.d30,c:'#DC2626'},{l:'30–60 Days',items:r.plan?.d60,c:'#D97706'},{l:'60–90 Days',items:r.plan?.d90,c:'#16A34A'}];
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><title>Orxion — ${f.name}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;color:#0f172a;font-family:'Inter',sans-serif;font-size:13px;line-height:1.65;padding:48px 60px;max-width:780px;margin:0 auto}.mn{font-family:'JetBrains Mono';font-size:9px;letter-spacing:1.5px;color:#64748b;text-transform:uppercase}h1{font-size:26px;font-weight:800;letter-spacing:-0.5px;margin-bottom:3px}h2{font-family:'JetBrains Mono';font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#64748b;margin:26px 0 12px;padding-bottom:7px;border-bottom:1px solid #e2e8f0}h3{font-size:13px;font-weight:700;margin-bottom:3px}.sn{font-family:'JetBrains Mono';font-size:64px;font-weight:700;color:${col};line-height:1}.vd{font-size:14px;font-style:italic;border-left:3px solid #4F8EF7;padding-left:12px;margin:12px 0;line-height:1.5;color:#1e293b}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.mc{border:1px solid #e2e8f0;border-radius:6px;padding:12px}.mv{font-family:'JetBrains Mono';font-size:20px;font-weight:600;margin-top:2px}ul{list-style:none}li{padding:5px 0;border-bottom:1px solid #f8fafc;display:flex;gap:7px;font-size:12px;color:#475569}li:last-child{border-bottom:none}.rc{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:11px;font-size:12px;color:#78350f;line-height:1.55}.pb{padding:9px 0;border-bottom:1px solid #f8fafc;display:flex;gap:9px}.pb:last-child{border-bottom:none}.pbg{font-family:'JetBrains Mono';font-size:8px;color:#4F8EF7;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px}.ph{margin-bottom:16px}.phl{font-family:'JetBrains Mono';font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;display:inline-block;padding:3px 9px;border-radius:4px;margin-bottom:7px}.ft{margin-top:36px;padding-top:12px;border-top:1px solid #e2e8f0;font-family:'JetBrains Mono';font-size:9px;color:#cbd5e1;display:flex;justify-content:space-between}@page{margin:.5in}</style></head><body>
-<div style="display:flex;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid #e2e8f0"><div><div class="mn" style="margin-bottom:6px">Orxion AI · Business Diagnosis</div><h1>${f.name}</h1><div class="mn" style="margin-top:3px">${f.industry} · ${f.stage}</div></div><div style="text-align:right"><div class="mn">Orxion AI</div><div style="font-weight:700;margin-top:2px">Confidential Report</div><div class="mn" style="margin-top:2px">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div></div></div>
-<div style="display:flex;gap:22px;margin-bottom:20px"><div><div class="sn">${r.score}</div><div class="mn" style="margin-top:3px">Health Score</div></div><div style="flex:1"><div class="vd">"${r.summary}"</div><p style="font-size:13px;color:#475569;font-style:italic">${r.verdict||''}</p></div></div>
-${r.metrics?`<h2>Key Metrics</h2><div class="g3">${Object.entries(r.metrics).map(([k,v])=>`<div class="mc"><div class="mn" style="font-size:8px;margin-bottom:3px">${k}</div><div class="mv">${v}</div></div>`).join('')}</div>`:''}
-<h2>Key Problems</h2><ul>${(r.problems||[]).map(p=>`<li><span style="color:#FF5B5B;font-weight:700;flex-shrink:0">▸</span>${p}</li>`).join('')}</ul>
-<h2>Root Causes</h2><div class="g3">${(r.rootCauses||[]).map((c,i)=>`<div class="rc"><div class="mn" style="font-size:8px;color:#92400e;margin-bottom:4px">Cause ${String(i+1).padStart(2,'0')}</div>${c}</div>`).join('')}</div>
-<h2>Strategic Pillars</h2><div>${(r.pillars||[]).map((p,i)=>`<div class="pb"><span class="pbg">P${i+1}</span><div><h3>${p.title}</h3><div style="font-size:12px;color:#475569;line-height:1.55;margin-top:3px">${p.desc}</div></div></div>`).join('')}</div>
-<h2>90-Day Execution Plan</h2>${phs.map(p=>`<div class="ph"><span class="phl" style="color:${p.c};background:${p.c}15;border:1px solid ${p.c}30">${p.l}</span><ul>${(p.items||[]).map(a=>`<li><span style="color:${p.c};font-weight:700;flex-shrink:0">→</span>${a}</li>`).join('')}</ul></div>`).join('')}
-<div class="ft"><span>ORXION AI · CONFIDENTIAL · FOR INTERNAL USE ONLY</span><span>${new Date().toISOString().split('T')[0]}</span></div></body></html>`);
-  w.document.close();setTimeout(()=>w.print(),900);
-}
+function togCh(ch){const i=sCh.indexOf(ch);i>=0?sCh.splice(i,1):sCh.push(ch);initChannels()}
 
 /* STMT TOGGLE */
-function setStmt(has){
-  appState.hasStmt=has;
-  const btnY=document.getElementById('btn-has-stmt');
-  const btnN=document.getElementById('btn-no-stmt');
-  const upload=document.getElementById('stmt-upload-zone');
-  const manual=document.getElementById('manual-financials');
+function setStmt(form,has){
+  appState.hasStmt[form]=has;
+  const btnY=document.getElementById(form+'-has-y');
+  const btnN=document.getElementById(form+'-has-n');
+  const upload=document.getElementById(form+'-upload');
+  const manual=form==='s'?document.getElementById('s-manual'):null;
+  const acCol=form==='s'?'var(--blue)':'var(--amb)';
   if(has){
-    btnY.style.background='rgba(79,142,247,.2)';btnY.style.borderColor='var(--blue)';btnY.style.color='#fff';
-    btnN.style.background='transparent';btnN.style.borderColor='var(--bdr)';btnN.style.color='var(--txt2)';
+    if(btnY){btnY.style.background='rgba(79,142,247,.2)';btnY.style.borderColor='var(--blue)';btnY.style.color='#fff';}
+    if(btnN){btnN.style.background='transparent';btnN.style.borderColor='var(--bdr)';btnN.style.color='var(--txt2)';}
     if(upload)upload.style.display='block';
     if(manual)manual.style.display='none';
   } else {
-    btnN.style.background='rgba(255,255,255,.06)';btnN.style.borderColor='var(--bdr2)';btnN.style.color='#fff';
-    btnY.style.background='transparent';btnY.style.borderColor='rgba(79,142,247,.3)';btnY.style.color='var(--blue2)';
+    if(btnN){btnN.style.background='rgba(255,255,255,.07)';btnN.style.borderColor='var(--bdr2)';btnN.style.color='#fff';}
+    if(btnY){btnY.style.background='transparent';btnY.style.borderColor='rgba(79,142,247,.3)';btnY.style.color='var(--blue2)';}
     if(upload)upload.style.display='none';
     if(manual)manual.style.display='block';
   }
 }
 
-function handleFile(input){
+function handleUpload(form,input){
   if(!input.files[0])return;
-  appState.pdfName=input.files[0].name;
-  document.getElementById('upload-icon').textContent='✅';
-  document.getElementById('upload-label').textContent=appState.pdfName;
-  document.getElementById('upload-label').style.color='var(--grn)';
+  const name=input.files[0].name;
+  const icon=document.getElementById(form+'-file-icon');
+  const lbl=document.getElementById(form+'-file-lbl');
+  if(icon)icon.textContent='✅';
+  if(lbl){lbl.textContent=name;lbl.style.color='var(--grn)';}
+}
+
+/* VALIDATION */
+function val(id,errId,msg){
+  const v=document.getElementById(id)?.value?.trim();
+  if(!v){showErr(errId,msg);return false;}
+  return true;
+}
+function showErr(id,msg){
+  const el=document.getElementById(id);
+  if(el){el.textContent='⚠ '+msg;el.style.display='block';el.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+function hideErr(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+
+/* PROGRESS */
+function upd(pct,msg){
+  const f=document.getElementById('prog-fill');
+  const p=document.getElementById('load-pct');
+  const m=document.getElementById('load-msg');
+  if(f)f.style.width=Math.min(100,Math.round(pct))+'%';
+  if(p)p.textContent=Math.min(100,Math.round(pct))+'%';
+  if(msg&&m)m.textContent=msg;
+}
+
+function startLoad(moduleLabel,msgs){
+  goTo('load');
+  const lm=document.getElementById('load-module');
+  if(lm)lm.textContent='ORXION AI · '+moduleLabel;
+  appState.pct=0;
+  clearInterval(appState.loadInt);
+  upd(0,msgs[0]);
+  let mi=0;
+  appState.loadInt=setInterval(()=>{
+    appState.pct=Math.min(appState.pct+(appState.pct<88?10+Math.random()*9:0.4),97);
+    upd(appState.pct,appState.pct<88?msgs[Math.min(mi,msgs.length-1)]:'Waiting for AI response…');
+    mi++;
+  },900);
+}
+
+async function callAPI(payload){
+  const res=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!res.ok){const t=await res.json().catch(()=>({}));throw new Error(t.error||'API error '+res.status);}
+  const json=await res.json();
+  return json.report;
+}
+
+function parseReport(report){
+  clearInterval(appState.loadInt);
+  if(typeof report.score!=='number')report.score=parseInt(String(report.score))||50;
+  appState.report=report;
+  upd(100,'Report ready!');
+  setTimeout(()=>{goTo('rep');requestAnimationFrame(()=>requestAnimationFrame(()=>{try{buildReport()}catch(e){console.error(e)}}))},350);
+}
+
+function handleErr(errId,e){
+  clearInterval(appState.loadInt);
+  goTo('land');
+  console.error(e);
+  alert('Analysis failed: '+e.message+'\n\nPlease check your API configuration.');
+}
+
+/* ── STRATEGY ── */
+function runStrategy(){
+  hideErr('err-strategy');
+  if(!val('s-name','err-strategy','Business name is required'))return;
+  if(!val('s-industry','err-strategy','Industry is required'))return;
+  if(!val('s-stage','err-strategy','Stage is required'))return;
+  const hasStmt=appState.hasStmt['s'];
+  appState.module='strategy';
+  appState.fdata={
+    module:'strategy',
+    name:document.getElementById('s-name').value,
+    industry:document.getElementById('s-industry').value,
+    stage:document.getElementById('s-stage').value,
+    revenue:hasStmt?'(from statements)':document.getElementById('s-rev').value||'?',
+    costs:hasStmt?'(from statements)':document.getElementById('s-costs').value||'?',
+    cac:hasStmt?'(from statements)':document.getElementById('s-cac').value||'?',
+    ltv:hasStmt?'(from statements)':document.getElementById('s-ltv').value||'?',
+    conv:document.getElementById('s-conv')?.value||'?',
+    team:document.getElementById('s-team')?.value||'?',
+    channels:sCh,
+    website:document.getElementById('s-web').value||'N/A',
+    hasStatements:hasStmt
+  };
+  startLoad('STRATEGY',['Parsing business profile…','Running financial model…','Benchmarking vs peers…','Mapping root causes…','Building strategic options…','Compiling report…']);
+  callAPI(appState.fdata).then(parseReport).catch(e=>handleErr('err-strategy',e));
+}
+
+/* ── VALUATION ── */
+function runValuation(){
+  hideErr('err-valuation');
+  if(!val('v-name','err-valuation','Business name is required'))return;
+  if(!val('v-industry','err-valuation','Industry is required'))return;
+  if(!val('v-stage','err-valuation','Stage is required'))return;
+  if(!val('v-rev','err-valuation','Annual revenue is required'))return;
+  appState.module='valuation';
+  appState.fdata={
+    module:'valuation',
+    name:document.getElementById('v-name').value,
+    industry:document.getElementById('v-industry').value,
+    stage:document.getElementById('v-stage').value,
+    revenue:document.getElementById('v-rev').value,
+    costs:document.getElementById('v-costs').value||'?',
+    margin:document.getElementById('v-margin').value||'?',
+    growth:document.getElementById('v-growth').value||'?',
+    churn:document.getElementById('v-churn').value||'?',
+    funding:document.getElementById('v-funding').value||'0',
+    team:document.getElementById('v-team').value||'?',
+    purpose:document.getElementById('v-purpose').value||'General',
+    comps:document.getElementById('v-comps').value||'N/A'
+  };
+  startLoad('VALUATION',['Analyzing financials…','Calculating revenue multiples…','Modeling DCF scenarios…','Benchmarking sector comps…','Building investor summary…','Finalizing valuation range…']);
+  callAPI(appState.fdata).then(parseReport).catch(e=>handleErr('err-valuation',e));
+}
+
+/* ── MARKETING ── */
+function runMarketing(){
+  hideErr('err-marketing');
+  if(!val('m-name','err-marketing','Business name is required'))return;
+  if(!val('m-url','err-marketing','Website URL is required'))return;
+  appState.module='marketing';
+  appState.fdata={
+    module:'marketing',
+    name:document.getElementById('m-name').value,
+    industry:document.getElementById('m-industry').value||'N/A',
+    target:document.getElementById('m-target').value||'N/A',
+    website:document.getElementById('m-url').value,
+    instagram:document.getElementById('m-ig').value||'N/A',
+    linkedin:document.getElementById('m-li').value||'N/A',
+    facebook:document.getElementById('m-fb').value||'N/A',
+    other:document.getElementById('m-other').value||'N/A',
+    goal:document.getElementById('m-goal').value||'Full marketing review',
+    competitors:document.getElementById('m-comps').value||'N/A'
+  };
+  startLoad('MARKETING',['Analyzing website…','Auditing SEO signals…','Reviewing messaging…','Scanning social presence…','Identifying growth gaps…','Compiling audit report…']);
+  callAPI(appState.fdata).then(parseReport).catch(e=>handleErr('err-marketing',e));
+}
+
+/* ── BUNDLE ── */
+function runBundle(){
+  hideErr('err-bundle');
+  if(!val('b-name','err-bundle','Business name is required'))return;
+  if(!val('b-industry','err-bundle','Industry is required'))return;
+  if(!val('b-stage','err-bundle','Stage is required'))return;
+  appState.module='bundle';
+  appState.fdata={
+    module:'bundle',
+    name:document.getElementById('b-name').value,
+    industry:document.getElementById('b-industry').value,
+    stage:document.getElementById('b-stage').value,
+    revenue:document.getElementById('b-rev').value||'?',
+    costs:document.getElementById('b-costs').value||'?',
+    margin:document.getElementById('b-margin').value||'?',
+    growth:document.getElementById('b-growth').value||'?',
+    churn:document.getElementById('b-churn').value||'?',
+    team:document.getElementById('b-team').value||'?',
+    website:document.getElementById('b-web').value||'N/A',
+    instagram:document.getElementById('b-ig').value||'N/A',
+    linkedin:document.getElementById('b-li').value||'N/A',
+    purpose:document.getElementById('b-purpose').value||'General'
+  };
+  startLoad('BUNDLE',['Parsing all data…','Running strategy analysis…','Calculating valuation…','Auditing marketing…','Cross-referencing insights…','Building unified report…']);
+  callAPI(appState.fdata).then(parseReport).catch(e=>handleErr('err-bundle',e));
+}
+
+/* ── REPORT BUILD ── */
+function scHex(s){return s>=70?'#22D47A':s>=45?'#F5A623':'#FF5B5B'}
+function scLbl(s){return s>=70?'STRONG':s>=45?'AT RISK':'CRITICAL'}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+function gc(){return{grid:'rgba(255,255,255,.06)',text:'#4A5568'}}
+
+function buildReport(){
+  const r=appState.report,f=appState.fdata;if(!r)return;
+  const mod=f.module||'strategy';
+  const modColors={strategy:'var(--blue)',valuation:'var(--grn)',marketing:'var(--amb)',bundle:'var(--pur)'};
+  const modColor=modColors[mod]||'var(--blue)';
+  const sc=r.score||50,col=scHex(sc);
+  const ringC=2*Math.PI*48,ringF=(sc/100)*ringC;
+  const ments=Object.entries(r.metrics||{});
+  const mCols=['#22D47A','#F5A623','#FF5B5B','#4F8EF7'];
+  const pillarCols=['#4F8EF7','#A78BFA','#22D47A'];
+  const phaseCols=[{l:'0–30 DAYS',items:r.plan?.d30,c:'#FF5B5B'},{l:'30–60 DAYS',items:r.plan?.d60,c:'#F5A623'},{l:'60–90 DAYS',items:r.plan?.d90,c:'#22D47A'}];
+
+  let html = `
+  <div style="background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(123,92,246,.05));border:1px solid rgba(79,142,247,.2);border-radius:16px;padding:28px;margin-bottom:20px;animation:fadeUp .6s ease both">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px">
+      <div>
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:${modColor};letter-spacing:1.5px;margin-bottom:6px;text-transform:uppercase">${mod.toUpperCase()} REPORT</div>
+        <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-.5px;margin-bottom:4px">${f.name}</div>
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--txt3)">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})} · ORXION AI</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          ${[f.industry,f.stage].filter(Boolean).map(t=>`<span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);background:rgba(255,255,255,.05);border:1px solid var(--bdr);padding:2px 8px;border-radius:3px">${t}</span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>
+          <circle cx="55" cy="55" r="48" fill="none" stroke="${col}" stroke-width="8" stroke-dasharray="${ringF.toFixed(1)} ${ringC.toFixed(1)}" stroke-linecap="round" transform="rotate(-90 55 55)"/>
+          <text x="55" y="50" text-anchor="middle" fill="${col}" font-size="24" font-weight="800" font-family="Inter,sans-serif">${sc}</text>
+          <text x="55" y="65" text-anchor="middle" fill="#4A5568" font-size="9" font-family="JetBrains Mono,monospace" letter-spacing="1">/100</text>
+          <text x="55" y="79" text-anchor="middle" fill="${col}" font-size="10" font-weight="700" font-family="Inter,sans-serif">${scLbl(sc)}</text>
+        </svg>
+        <div style="max-width:300px">
+          <div class="rcard-title" style="margin-bottom:8px"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:${modColor};margin-right:7px"></span>Summary</div>
+          <blockquote style="font-size:14px;font-weight:600;color:#fff;border-left:3px solid ${modColor};padding-left:13px;line-height:1.55;margin-bottom:8px">"${r.summary||''}"</blockquote>
+          <p style="font-size:12px;color:var(--txt2);font-style:italic">${r.verdict||''}</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  if(ments.length){
+    html+=`<div class="kpi-grid">${ments.map(([k,v],i)=>`<div class="kpi" style="animation:fadeUp .5s ${.04+i*.06}s ease both"><div class="kpi-lbl">${k}</div><div class="kpi-val" style="color:${mCols[i%4]}">${v}</div></div>`).join('')}</div>`;
+  }
+
+  // Charts
+  if(r.revenueHistory||r.radarLabels){
+    html+=`<div style="display:grid;grid-template-columns:${r.revenueHistory&&r.channelVals?'2fr 1fr':r.radarLabels?'2fr 1fr':'1fr'};gap:14px;margin-bottom:14px">`;
+    if(r.revenueHistory){html+=`<div class="rcard"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--blue);margin-right:7px"></span>Revenue Trajectory</div><div style="height:130px"><canvas id="rep-rev"></canvas></div></div>`;}
+    if(r.radarLabels){html+=`<div class="rcard"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--pur);margin-right:7px"></span>Dimensions</div><canvas id="rep-radar" height="130"></canvas></div>`;}
+    html+=`</div>`;
+  }
+
+  // Valuation section
+  if(r.valuation){
+    const v=r.valuation;
+    html+=`<div class="rcard" style="margin-bottom:14px;border-color:rgba(34,212,122,.2);background:rgba(34,212,122,.03)">
+      <div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--grn);margin-right:7px"></span>Investor Valuation Estimate</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+        <div><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:4px;letter-spacing:1px">VALUATION RANGE</div><div style="font-size:32px;font-weight:900;color:#fff;letter-spacing:-1px">${v.evRange||'N/A'}</div></div>
+        <div style="text-align:right"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:4px;letter-spacing:1px">REVENUE MULTIPLE</div><div style="font-size:26px;font-weight:900;color:var(--grn)">${v.revenueMultiple||'N/A'}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:rgba(255,91,91,.07);border:1px solid rgba(255,91,91,.18);border-radius:9px;padding:13px;text-align:center"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--red);letter-spacing:1px;margin-bottom:4px">BEAR CASE</div><div style="font-size:20px;font-weight:800;color:var(--red)">${v.bear||'N/A'}</div></div>
+        <div style="background:rgba(79,142,247,.07);border:1px solid rgba(79,142,247,.2);border-radius:9px;padding:13px;text-align:center"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--blue);letter-spacing:1px;margin-bottom:4px">BASE CASE</div><div style="font-size:20px;font-weight:800;color:var(--blue)">${v.base||'N/A'}</div></div>
+        <div style="background:rgba(34,212,122,.07);border:1px solid rgba(34,212,122,.18);border-radius:9px;padding:13px;text-align:center"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:1px;margin-bottom:4px">BULL CASE</div><div style="font-size:20px;font-weight:800;color:var(--grn)">${v.bull||'N/A'}</div></div>
+      </div>
+      ${v.enhancers?`<div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:1px;margin-bottom:8px">VALUATION ENHANCERS</div>${v.enhancers.map((e,i)=>`<div style="display:flex;gap:8px;padding:7px 10px;background:rgba(34,212,122,.04);border-radius:7px;margin-bottom:5px;font-size:12px;color:var(--txt2)"><span style="color:var(--grn);font-weight:700;flex-shrink:0">${i+1}.</span>${e}</div>`).join('')}`:''}
+      ${v.investorNote?`<div style="margin-top:12px;padding:11px 14px;background:rgba(34,212,122,.07);border-left:3px solid var(--grn);border-radius:0 8px 8px 0;font-size:13px;color:var(--txt2);font-style:italic">"${v.investorNote}"</div>`:''}
+    </div>`;
+  }
+
+  // Marketing section
+  if(r.marketing){
+    const mk=r.marketing;
+    html+=`<div class="rcard" style="margin-bottom:14px;border-color:rgba(245,166,35,.2)">
+      <div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--amb);margin-right:7px"></span>Marketing Audit</div>
+      ${mk.websiteScore?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:16px">${Object.entries(mk.scores||{}).map(([k,v])=>`<div style="background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:9px;padding:11px;text-align:center"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--txt3);margin-bottom:4px">${k}</div><div style="font-size:20px;font-weight:800;color:var(--amb)">${v}</div></div>`).join('')}</div>`:''}
+      ${mk.issues?`<div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1px;margin-bottom:8px">KEY ISSUES</div>${mk.issues.map((iss,i)=>`<div style="display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--bdr);align-items:flex-start${i===mk.issues.length-1?';border-bottom:none':''}"><span style="font-size:9px;font-weight:700;font-family:JetBrains Mono,monospace;padding:2px 6px;border-radius:4px;flex-shrink:0;margin-top:2px;background:rgba(245,166,35,.1);color:var(--amb)">${String(i+1).padStart(2,'0')}</span><span style="font-size:13px;color:var(--txt2);line-height:1.6">${iss}</span></div>`).join('')}`:''}
+      ${mk.recommendations?`<div style="margin-top:12px"><div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:1px;margin-bottom:8px">GROWTH RECOMMENDATIONS</div>${mk.recommendations.map((rec,i)=>`<div style="display:flex;gap:8px;padding:7px 10px;background:rgba(34,212,122,.04);border-radius:7px;margin-bottom:5px;font-size:12px;color:var(--txt2)"><span style="color:var(--grn);font-weight:700">→</span>${rec}</div>`).join('')}</div>`:''}
+    </div>`;
+  }
+
+  // Problems + Root causes
+  if(r.problems||r.rootCauses){
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">`;
+    if(r.problems){html+=`<div class="rcard"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--red);margin-right:7px"></span>Key Problems</div>${r.problems.map((p,i)=>`<div class="finding"><span class="badge" style="background:rgba(255,91,91,.1);color:var(--red)">${String(i+1).padStart(2,'0')}</span><span style="font-size:13px;color:var(--txt2);line-height:1.6">${p}</span></div>`).join('')}</div>`;}
+    if(r.channelVals){html+=`<div class="rcard"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--amb);margin-right:7px"></span>Channel Performance</div><div style="height:155px"><canvas id="rep-ch"></canvas></div></div>`;}
+    else if(r.rootCauses){html+=`<div class="rcard"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--amb);margin-right:7px"></span>Root Causes</div>${r.rootCauses.map((rc,i)=>`<div class="root-box"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1px;margin-bottom:4px">CAUSE ${String(i+1).padStart(2,'0')}</div><div style="font-size:12px;color:var(--txt2);line-height:1.6">${rc}</div></div>`).join('')}</div>`;}
+    html+=`</div>`;
+    if(r.rootCauses&&r.channelVals){html+=`<div class="rcard" style="margin-bottom:14px"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--amb);margin-right:7px"></span>Root Causes</div>${r.rootCauses.map((rc,i)=>`<div class="root-box"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--amb);letter-spacing:1px;margin-bottom:4px">CAUSE ${String(i+1).padStart(2,'0')}</div><div style="font-size:12px;color:var(--txt2);line-height:1.6">${rc}</div></div>`).join('')}</div>`;}
+  }
+
+  // Pillars
+  if(r.pillars){html+=`<div class="rcard" style="margin-bottom:14px"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--blue);margin-right:7px"></span>Strategic Pillars</div>${r.pillars.map((p,i)=>`<div class="pillar" style="border-left-color:${pillarCols[i%3]}"><div style="font-size:9px;font-family:'JetBrains Mono',monospace;color:${pillarCols[i%3]};margin-bottom:5px;letter-spacing:1px">PILLAR 0${i+1}</div><div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:5px;letter-spacing:-.2px">${p.title}</div><div style="font-size:12px;color:var(--txt2);line-height:1.65">${p.desc}</div></div>`).join('')}</div>`;}
+
+  // Action plan
+  if(r.plan){html+=`<div class="rcard" style="margin-bottom:14px"><div class="rcard-title"><span style="display:inline-block;width:3px;height:12px;border-radius:2px;background:var(--grn);margin-right:7px"></span>90-Day Execution Plan</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px" class="plan-grid">${phaseCols.map(ph=>`<div><div class="phase-hdr" style="color:${ph.c};border-bottom-color:${ph.c}30">${ph.l}</div>${(ph.items||[]).map(a=>`<div class="phase-item"><span style="color:${ph.c};flex-shrink:0;font-weight:700">→</span>${a}</div>`).join('')}</div>`).join('')}</div></div>`;}
+
+  html+=`<div style="background:linear-gradient(135deg,rgba(79,142,247,.08),rgba(123,92,246,.05));border:1px solid rgba(79,142,247,.2);border-radius:16px;padding:28px;text-align:center">
+    <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;letter-spacing:-.5px">Ready to present?</div>
+    <p style="font-size:13px;color:var(--txt2);margin-bottom:20px">Export a board-ready PDF with full analysis and recommendations.</p>
+    <button class="btn btn-blue" style="font-size:14px;padding:13px 30px" onclick="exportPDF()">↓ Export PDF Report</button>
+  </div>`;
+
+  document.getElementById('report-body').innerHTML=html;
+  initRepCharts(r);
+}
+
+function initRepCharts(r){
+  setTimeout(()=>{
+    const {grid,text}=gc();
+    ['rep-radar','rep-rev','rep-ch'].forEach(destroyChart);
+    const rr=document.getElementById('rep-radar');
+    if(rr&&r.radarLabels&&r.radarVals)charts['rep-radar']=new Chart(rr,{type:'radar',data:{labels:r.radarLabels,datasets:[{data:r.radarVals,backgroundColor:'rgba(79,142,247,.12)',borderColor:'#4F8EF7',borderWidth:2,pointBackgroundColor:'#4F8EF7',pointRadius:3}]},options:{responsive:true,maintainAspectRatio:true,scales:{r:{beginAtZero:true,max:100,ticks:{display:false},grid:{color:grid},pointLabels:{color:text,font:{size:9,family:'JetBrains Mono'}},angleLines:{color:grid}}},plugins:{legend:{display:false}}}});
+    const rv=document.getElementById('rep-rev');
+    if(rv&&r.revenueHistory){const months=['J','F','M','A','M','J','J','A','S','O','N','D'].slice(-r.revenueHistory.length);charts['rep-rev']=new Chart(rv,{type:'line',data:{labels:months,datasets:[{data:r.revenueHistory,borderColor:'#4F8EF7',backgroundColor:'rgba(79,142,247,.07)',borderWidth:2,tension:.4,fill:true,pointRadius:0,pointHoverRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'},callback:v=>'$'+v+'K'}}},plugins:{legend:{display:false}}}});}
+    const rc=document.getElementById('rep-ch');
+    if(rc&&r.channelLabels&&r.channelVals)charts['rep-ch']=new Chart(rc,{type:'bar',data:{labels:r.channelLabels,datasets:[{data:r.channelVals,backgroundColor:['rgba(79,142,247,.6)','rgba(34,212,122,.6)','rgba(167,139,250,.6)','rgba(245,166,35,.6)','rgba(34,212,200,.6)'],borderColor:['#4F8EF7','#22D47A','#A78BFA','#F5A623','#22D4C8'],borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}}},y:{grid:{color:grid},ticks:{color:text,font:{size:9,family:'JetBrains Mono'}},max:100}},plugins:{legend:{display:false}}}});
+  },80);
+}
+
+/* PDF */
+function exportPDF(){
+  const r=appState.report,f=appState.fdata;if(!r)return;
+  const col=scHex(r.score);
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><title>Orxion — ${f.name}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff;color:#0f172a;font-family:'Inter',sans-serif;font-size:13px;line-height:1.65;padding:48px 60px;max-width:780px;margin:0 auto}.mn{font-family:'JetBrains Mono';font-size:9px;letter-spacing:1.5px;color:#64748b;text-transform:uppercase}h1{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:3px}h2{font-family:'JetBrains Mono';font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:#64748b;margin:24px 0 11px;padding-bottom:7px;border-bottom:1px solid #e2e8f0}h3{font-size:13px;font-weight:700;margin-bottom:3px}.sn{font-family:'JetBrains Mono';font-size:64px;font-weight:800;color:${col};line-height:1}.vd{font-size:14px;font-style:italic;border-left:3px solid #4F8EF7;padding-left:12px;margin:12px 0;line-height:1.5;color:#1e293b}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.mc{border:1px solid #e2e8f0;border-radius:6px;padding:11px}.mv{font-family:'JetBrains Mono';font-size:20px;font-weight:700;margin-top:2px}ul{list-style:none}li{padding:5px 0;border-bottom:1px solid #f8fafc;display:flex;gap:7px;font-size:12px;color:#475569}li:last-child{border-bottom:none}.rc{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px;font-size:12px;color:#78350f;line-height:1.55}.pb{padding:9px 0;border-bottom:1px solid #f8fafc;display:flex;gap:8px}.pb:last-child{border-bottom:none}.pbg{font-family:'JetBrains Mono';font-size:8px;color:#4F8EF7;background:#eff6ff;border:1px solid #bfdbfe;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:2px}.ph{margin-bottom:14px}.phl{font-family:'JetBrains Mono';font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;display:inline-block;padding:3px 9px;border-radius:4px;margin-bottom:7px}.ft{margin-top:32px;padding-top:11px;border-top:1px solid #e2e8f0;font-family:'JetBrains Mono';font-size:9px;color:#cbd5e1;display:flex;justify-content:space-between}@page{margin:.5in}</style></head><body>
+<div style="display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid #e2e8f0"><div><div class="mn" style="margin-bottom:5px">Orxion AI · ${(f.module||'').toUpperCase()} REPORT</div><h1>${f.name}</h1><div class="mn" style="margin-top:2px">${f.industry||''} · ${f.stage||''}</div></div><div style="text-align:right"><div class="mn">Orxion AI</div><div style="font-weight:700;margin-top:2px">Confidential</div><div class="mn" style="margin-top:2px">${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}</div></div></div>
+<div style="display:flex;gap:20px;margin-bottom:18px"><div><div class="sn">${r.score}</div><div class="mn" style="margin-top:3px">${scLbl(r.score)}</div></div><div style="flex:1"><div class="vd">"${r.summary||''}"</div><p style="font-size:13px;color:#475569;font-style:italic">${r.verdict||''}</p></div></div>
+${r.metrics?`<h2>Key Metrics</h2><div class="g3">${Object.entries(r.metrics).map(([k,v])=>`<div class="mc"><div class="mn" style="font-size:8px;margin-bottom:3px">${k}</div><div class="mv">${v}</div></div>`).join('')}</div>`:''}
+${r.valuation?`<h2>Investor Valuation</h2><div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:8px;padding:14px;margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><div class="mn" style="font-size:8px;color:#6d28d9">Range</div><div style="font-size:22px;font-weight:800;color:#7c3aed">${r.valuation.evRange||''}</div></div><div style="text-align:right"><div class="mn" style="font-size:8px;color:#6d28d9">Multiple</div><div style="font-size:22px;font-weight:800;color:#7c3aed">${r.valuation.revenueMultiple||''}</div></div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px"><div style="background:#fee2e2;border-radius:5px;padding:7px;text-align:center"><div class="mn" style="font-size:7px;color:#991b1b">Bear</div><div style="font-weight:700;color:#dc2626;font-size:14px">${r.valuation.bear||''}</div></div><div style="background:#eff6ff;border-radius:5px;padding:7px;text-align:center"><div class="mn" style="font-size:7px;color:#1e40af">Base</div><div style="font-weight:700;color:#2563eb;font-size:14px">${r.valuation.base||''}</div></div><div style="background:#f0fdf4;border-radius:5px;padding:7px;text-align:center"><div class="mn" style="font-size:7px;color:#166534">Bull</div><div style="font-weight:700;color:#16a34a;font-size:14px">${r.valuation.bull||''}</div></div></div>${r.valuation.investorNote?`<div style="margin-top:8px;font-size:12px;color:#6d28d9;font-style:italic">"${r.valuation.investorNote}"</div>`:''}</div>${r.valuation.enhancers?`<ul>${r.valuation.enhancers.map((e,i)=>`<li><span style="color:#7c3aed;font-weight:700">${i+1}.</span>${e}</li>`).join('')}</ul>`:''}`:''}
+${r.problems?`<h2>Key Problems</h2><ul>${r.problems.map(p=>`<li><span style="color:#FF5B5B;font-weight:700">▸</span>${p}</li>`).join('')}</ul>`:''}
+${r.rootCauses?`<h2>Root Causes</h2><div class="g3">${r.rootCauses.map((c,i)=>`<div class="rc"><div class="mn" style="font-size:8px;color:#92400e;margin-bottom:3px">Cause ${String(i+1).padStart(2,'0')}</div>${c}</div>`).join('')}</div>`:''}
+${r.pillars?`<h2>Strategic Pillars</h2><div>${r.pillars.map((p,i)=>`<div class="pb"><span class="pbg">P${i+1}</span><div><h3>${p.title}</h3><div style="font-size:12px;color:#475569;line-height:1.55;margin-top:2px">${p.desc}</div></div></div>`).join('')}</div>`:''}
+${r.plan?`<h2>90-Day Action Plan</h2>${[{l:'0–30 Days',items:r.plan.d30,c:'#DC2626'},{l:'30–60 Days',items:r.plan.d60,c:'#D97706'},{l:'60–90 Days',items:r.plan.d90,c:'#16A34A'}].map(p=>`<div class="ph"><span class="phl" style="color:${p.c};background:${p.c}15;border:1px solid ${p.c}30">${p.l}</span><ul>${(p.items||[]).map(a=>`<li><span style="color:${p.c};font-weight:700">→</span>${a}</li>`).join('')}</ul></div>`).join('')}`:''}
+<div class="ft"><span>ORXION AI · CONFIDENTIAL</span><span>${new Date().toISOString().split('T')[0]}</span></div></body></html>`);
+  w.document.close();setTimeout(()=>w.print(),900);
 }
 
 /* RESET */
 function resetApp(){
-  appState.report=null;appState.fdata=null;appState.pdfName='';appState.hasStmt=false;selectedChannels=[];
-  ['f-name','f-industry','f-stage','f-rev','f-costs','f-cac','f-ltv','f-conv','f-team','f-web'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  const err=document.getElementById('form-error');if(err)err.style.display='none';
-  // Reset stmt toggle
-  const upload=document.getElementById('stmt-upload-zone');
-  const manual=document.getElementById('manual-financials');
-  if(upload)upload.style.display='none';
-  if(manual)manual.style.display='block';
-  const btnY=document.getElementById('btn-has-stmt');
-  const btnN=document.getElementById('btn-no-stmt');
-  if(btnY){btnY.style.background='rgba(79,142,247,.15)';btnY.style.borderColor='rgba(79,142,247,.4)';btnY.style.color='var(--blue2)';}
-  if(btnN){btnN.style.background='transparent';btnN.style.borderColor='var(--bdr)';btnN.style.color='var(--txt2)';}
-  const uIcon=document.getElementById('upload-icon');if(uIcon)uIcon.textContent='📄';
-  const uLabel=document.getElementById('upload-label');if(uLabel){uLabel.textContent='Upload PDF · P&L, annual report, financial statements';uLabel.style.color='';}
-  initChannels();goTo('land');
+  appState={module:'',report:null,fdata:null,pct:0,loadInt:null,hasStmt:{s:false,m:false}};
+  sCh=[];
+  initChannels();
+  goTo('land');
 }
 
 /* INIT */
 initTicker();
 initChannels();
-initLandCharts();
-animateHero();
 </script>
 </body>
 </html>
