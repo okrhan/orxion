@@ -1,5 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next"
+  "functions": {
+    "pages/api/analyze.ts": {
+      "maxDuration": 60
+    }
+  }
 }
