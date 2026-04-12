@@ -862,7 +862,7 @@ function runStrategy(){
   if(!val('s-industry','err-strategy','Industry is required'))return;
   if(!val('s-stage','err-strategy','Stage is required'))return;
   const hasStmt=appState.hasStmt['s'];
-  appState.module='strategy';
+  const stmtNote=hasStmt&&appState.uploadedFiles&&appState.uploadedFiles['s']?`Financial statements uploaded: ${appState.uploadedFiles['s'].name}`:'';  appState.module='strategy';
   appState.fdata={
     module:'strategy',
     name:document.getElementById('s-name').value,
