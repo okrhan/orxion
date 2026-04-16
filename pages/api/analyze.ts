@@ -22,31 +22,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const stmtNote = body.stmtNote || "";
 
     const prompts: Record<string, string> = {
-      strategy: `You are a top-tier global strategy consultant (McKinsey/BCG level), combined with a CFO and private equity analyst. Your job is NOT to generate a generic report. Your job is to produce a decision-grade business analysis that a CEO or investor can ACT on immediately.
+      strategy: `You are a McKinsey/BCG strategy partner + CFO + PE analyst. Produce a decision-grade analysis a CEO can act on immediately. Be brutally honest. Quantify everything. No generic statements.
 
-COMPANY DATA:
-COMPANY:${body.name} INDUSTRY:${body.industry} STAGE:${body.stage}
-REVENUE:$${body.revenue||"?"}/mo COSTS:$${body.costs||"?"}/mo CAC:$${body.cac||"?"} LTV:$${body.ltv||"?"}
-TEAM:${body.team||"?"} CHANNELS:${(body.channels||[]).join(",")||"none"} WEB:${body.website||"N/A"}
-${stmtNote ? `FINANCIAL STATEMENTS UPLOADED: ${stmtNote} — extract and use ALL financial figures precisely.` : ""}
+INPUT: Company=${body.name} Industry=${body.industry} Stage=${body.stage} Revenue=$${body.revenue||"?"}/mo Costs=$${body.costs||"?"}/mo CAC=$${body.cac||"?"} LTV=$${body.ltv||"?"} Team=${body.team||"?"} Channels=${(body.channels||[]).join(",")||"none"} Web=${body.website||"N/A"}
+${stmtNote ? `STATEMENTS: ${stmtNote}` : ""}
 
-ANALYSIS REQUIREMENTS (follow all 10 modules):
-1. DATA VALIDATION: Identify inconsistencies, missing data, suspicious numbers. Assign data completeness score and confidence level.
-2. CORE DIAGNOSIS: Separate symptoms from root causes. Quantify issues. Be brutally honest.
-3. BENCHMARK & CONTEXT: Compare with industry averages and best-in-class. State assumptions if estimated.
-4. VALUATION LOGIC: If applicable, explain method and derivation. If not reliable, state why.
-5. DECISION ENGINE: Top 3 priorities only — with impact, effort, time to impact, and what NOT to do.
-6. FINANCIAL IMPACT MODEL: Current state vs projected state with net impact.
-7. EXECUTION PLAN: 0-3 months, 3-6 months, 6-12 months. Realistic and measurable.
-8. CONSTRAINTS & RISKS: Organizational, regulatory, market. What could fail and why.
-9. SCENARIO ANALYSIS: Bear/Base/Bull with probabilities and financial outcomes.
-10. FINAL INSIGHT: One brutally honest conclusion. One key leverage point.
+RULES: 1) Validate data first - flag inconsistencies 2) Separate symptoms from root causes 3) Benchmark vs industry peers 4) Top 3 priorities only with impact/effort/time 5) Financial impact: current vs projected 6) Bear/Base/Bull scenarios 7) One leverage point that changes everything. If data incomplete, say so explicitly.
 
-STYLE: Direct, sharp, non-generic. Every statement must have reasoning. Think like presenting to a CEO or investor board. If data is incomplete, state limitations clearly — do not fake certainty.
-
-Return ONLY raw JSON starting with { and ending with }. No markdown, no backticks, no text outside JSON.
-
-{"score":75,"dataCompleteness":"72%","confidenceLevel":"Medium","summary":"One incisive sentence with specific numbers — no fluff","metrics":{"Margin":"28%","LTV:CAC":"3.2x","Runway":"6 mo","Unit Econ":"Marginal"},"dataFlags":["Flag 1: inconsistency or missing data","Flag 2"],"radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LinkedIn","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Symptom 1 with specific data","Symptom 2","Symptom 3","Symptom 4"],"rootCauses":["Root cause 1 — quantified","Root cause 2","Root cause 3"],"notToDo":["Action to avoid 1","Action to avoid 2"],"financialImpact":{"currentRevenue":"$X/mo","currentCosts":"$X/mo","currentMargin":"X%","projectedRevenue":"$X/mo","projectedMargin":"X%","netImpact":"$X improvement over 12 months"},"pillars":[{"title":"Priority 1","desc":"Two sentences with impact, effort, time.","impact":"$X or X%","effort":"Medium","timeToImpact":"3 months"},{"title":"Priority 2","desc":"Two sentences.","impact":"$X or X%","effort":"Low","timeToImpact":"1 month"},{"title":"Priority 3","desc":"Two sentences.","impact":"$X or X%","effort":"High","timeToImpact":"6 months"}],"plan":{"d30":["Realistic action 1 with measurable outcome","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"One brutally honest conclusion about this specific business.","leveragePoint":"One key insight that can change everything.","benchmarks":[{"metric":"Operating Margin","value":"X%","peerAvg":"Y%","best":"Z%","status":"behind"},{"metric":"Cost/Revenue Ratio","value":"X%","peerAvg":"Y%","best":"Z%","status":"behind"},{"metric":"Revenue/Employee","value":"$X","peerAvg":"$Y","best":"$Z","status":"behind"}],"scenarios":[{"name":"Bear Case","probability":"25%","assumption":"Specific assumption","outcome":"Specific financial outcome","color":"red"},{"name":"Base Case","probability":"55%","assumption":"Specific assumption","outcome":"Specific financial outcome","color":"blue"},{"name":"Bull Case","probability":"20%","assumption":"Specific assumption","outcome":"Specific financial outcome","color":"green"}],"risks":[{"risk":"Specific risk 1","likelihood":"High","impact":"Critical","mitigation":"Specific action"},{"risk":"Risk 2","likelihood":"Medium","impact":"High","mitigation":"Action"},{"risk":"Risk 3","likelihood":"Low","impact":"Medium","mitigation":"Action"},{"risk":"Risk 4","likelihood":"Low","impact":"Critical","mitigation":"Action"}]}`,
+Return ONLY valid JSON. Start with { end with }. No markdown:
+{"score":75,"dataCompleteness":"72%","confidenceLevel":"Medium","summary":"Specific sentence with real numbers","metrics":{"Margin":"X%","LTV:CAC":"X","Runway":"X mo","Unit Econ":"X"},"dataFlags":["Flag 1","Flag 2"],"leveragePoint":"One insight that changes everything","radarLabels":["Growth","Margin","Retention","Marketing","Ops"],"radarVals":[65,40,70,55,60],"channelLabels":["SEO","Paid","LinkedIn","Social","Email"],"channelVals":[75,60,45,80,55],"revenueHistory":[42,45,48,44,52,58,56,62,60,68,72,74],"problems":["Problem 1 with data","Problem 2","Problem 3","Problem 4"],"rootCauses":["Root cause 1","Root cause 2","Root cause 3"],"notToDo":["Avoid this 1","Avoid this 2"],"financialImpact":{"currentRevenue":"$X/mo","currentCosts":"$X/mo","currentMargin":"X%","projectedRevenue":"$X/mo","projectedMargin":"X%","netImpact":"$X over 12mo"},"pillars":[{"title":"Priority 1","desc":"Two sentences.","impact":"$X","effort":"Medium","timeToImpact":"3 mo"},{"title":"Priority 2","desc":"Two sentences.","impact":"$X","effort":"Low","timeToImpact":"1 mo"},{"title":"Priority 3","desc":"Two sentences.","impact":"$X","effort":"High","timeToImpact":"6 mo"}],"plan":{"d30":["Action 1","Action 2","Action 3"],"d60":["Action 1","Action 2","Action 3"],"d90":["Action 1","Action 2","Action 3"]},"verdict":"Brutally honest conclusion.","benchmarks":[{"metric":"Operating Margin","value":"X%","peerAvg":"Y%","best":"Z%","status":"behind"},{"metric":"Cost/Revenue","value":"X%","peerAvg":"Y%","best":"Z%","status":"behind"},{"metric":"Revenue/Employee","value":"$X","peerAvg":"$Y","best":"$Z","status":"behind"}],"scenarios":[{"name":"Bear Case","probability":"25%","assumption":"Assumption","outcome":"Outcome","color":"red"},{"name":"Base Case","probability":"55%","assumption":"Assumption","outcome":"Outcome","color":"blue"},{"name":"Bull Case","probability":"20%","assumption":"Assumption","outcome":"Outcome","color":"green"}],"risks":[{"risk":"Risk 1","likelihood":"High","impact":"Critical","mitigation":"Action"},{"risk":"Risk 2","likelihood":"Medium","impact":"High","mitigation":"Action"},{"risk":"Risk 3","likelihood":"Low","impact":"Medium","mitigation":"Action"},{"risk":"Risk 4","likelihood":"Low","impact":"Critical","mitigation":"Action"}]}`,
 
       valuation: `You are an investment banker. Provide investor-grade valuation. Return ONLY raw JSON starting with { and ending with }. No markdown.
 COMPANY:${body.name} INDUSTRY:${body.industry} STAGE:${body.stage}
@@ -77,7 +61,7 @@ Return: {"score":68,"summary":"Comprehensive summary","metrics":{"Revenue":"$XM"
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: "claude-sonnet-4-5",
         max_tokens: 2000,
         messages: [{ role: "user", content: prompt }],
       }),
