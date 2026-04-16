@@ -1,7 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export const config = {
-  api: { bodyParser: { sizeLimit: '4mb' } },
+  api: {
+    bodyParser: { sizeLimit: '4mb' },
+    responseLimit: false,
+  },
+  maxDuration: 60,
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -73,8 +77,8 @@ Return: {"score":68,"summary":"Comprehensive summary","metrics":{"Revenue":"$XM"
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 3000,
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 2000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
